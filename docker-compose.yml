@@ -1,0 +1,17 @@
+networks:
+  overlay:
+
+services:
+  mysql:
+    image: mysql:8-debian
+    restart: always
+    env_file: docker-compose/mysql.env
+    volumes:
+      - mysql-db:/var/lib/mysql
+      - ./db_structure.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./seeds.sql:/docker-entrypoint-initdb.d/02-initdata.sql
+    networks:
+      - overlay
+
+volumes:
+  mysql-db:
