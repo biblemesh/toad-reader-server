@@ -12,6 +12,26 @@ services:
       - ./seeds.sql:/docker-entrypoint-initdb.d/02-initdata.sql
     networks:
       - overlay
+    # TODO remove the next line when we support the new auth plugin
+    command: ["--default-authentication-plugin", "mysql_native_password"]
+
+  app:
+    depends_on: ["mysql"]
+    build:
+      context: .
+      target: development
+    command: ["npm", "start"]
+    volumes:
+      # Note: only files in src will be updated; for all code outside src we must rebuild the image
+      - ./src:/app/src
+    init: true
+    env_file:
+      - docker-compose/app.env
+    networks:
+      - overlay
+    ports:
+      - 8080:8080
+
 
 volumes:
   mysql-db:
