@@ -50,10 +50,10 @@ RUN find *.md -exec sh -c 'pandoc -t html5 "{}" > $(basename "{}" .md).html' \;
 #####################
 
 FROM builder AS development
+LABEL org.opencontainers.image.source="https://github.com/biblemesh/toad-reader-server"
 
 COPY ./ ./
 
-RUN mkdir -pv docs
 COPY --from=docs /docs/*.html docs/
 RUN ln -sv ./docs/README.html index.html
 

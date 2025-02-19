@@ -1,0 +1,18 @@
+.git/
+**/node_modules
+
+**/.DS_Store
+**/.env
+**/.git
+
+**/.npmrc
+**/.serverless
+
+# Elastic Beanstalk Files
+**/.elasticbeanstalk/*
+!**/.elasticbeanstalk/*.cfg.yml
+!**/.elasticbeanstalk/*.global.yml
+
+# Temporary files
+**/tmp_epub_*
+
