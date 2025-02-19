@@ -3,20 +3,28 @@ networks:
 
 services:
   mysql:
-    image: mysql:8-debian
+    image: bitnami/mysql:8.3
     restart: always
     env_file: docker-compose/mysql.env
+    environment:
+      # TODO remove the next line when we support the new auth plugin
+      MYSQL_EXTRA_FLAGS: "--default-authentication-plugin=mysql_native_password"
     volumes:
       - mysql-db:/var/lib/mysql
-      - ./db_structure.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./seeds.sql:/docker-entrypoint-initdb.d/02-initdata.sql
+      - ./db_structure.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./seeds.sql:/docker-entrypoint-initdb.d/02-initdata.sql:ro
     networks:
       - overlay
-    # TODO remove the next line when we support the new auth plugin
-    command: ["--default-authentication-plugin", "mysql_native_password"]
+    healthcheck:
+      test: ['CMD', '/opt/bitnami/scripts/mysql/healthcheck.sh']
+      interval: 15s
+      timeout: 5s
+      retries: 6
 
   app:
-    depends_on: ["mysql"]
+    depends_on:
+      mysql:
+        condition: service_healthy
     build:
       context: .
       target: development
