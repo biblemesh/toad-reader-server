@@ -1,5 +1,7 @@
 ////////////// REQUIRES //////////////
+require("./src/instrument.js");
 
+const Sentry = require("@sentry/node");
 const express = require('express')
 const cors = require('cors')
 const app = express()
@@ -695,6 +697,8 @@ app.use('*', function(req, res, next) {
 })
 
 require('./src/routes/routes')(app, s3, passport, authFuncs, ensureAuthenticated, logIn, log)
+
+Sentry.setupExpressErrorHandler(app);
 
 process.on('unhandledRejection', reason => {
   log(['Unhandled node error', reason.stack || reason], 3)
