@@ -19,6 +19,18 @@
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
+  "lint-staged": {
+    "*.+(json|css|md|scss)": [
+      "prettier --write"
+    ],
+    "*.+(js|jsx|ts|tsx)": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.json": [
+      "jsonsort"
+    ]
+  },
   "dependencies": {
     "@sentry/node": "^9.2.0",
     "@sentry/profiling-node": "^9.2.0",
