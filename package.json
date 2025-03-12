@@ -13,7 +13,24 @@
     "deploy-staging": "npm run go-deploy-staging -s",
     "go-deploy-staging": "(echo '-----------------\nDeploy staging...\n-----------------\n' && npm run confirm && npx serverless deploy --stage staging) || true",
     "deploy-production": "npm run go-deploy-production -s",
-    "go-deploy-production": "(echo '--------------------\nDeploy production...\n--------------------\n' && npm run confirm && npx serverless deploy --stage production) || true"
+    "go-deploy-production": "(echo '--------------------\nDeploy production...\n--------------------\n' && npm run confirm && npx serverless deploy --stage production) || true",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.+(json|css|md|scss)": [
+      "prettier --write"
+    ],
+    "*.+(js|jsx|ts|tsx)": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.json": [
+      "jsonsort"
+    ]
   },
   "dependencies": {
     "@sentry/node": "^9.2.0",
@@ -54,6 +71,13 @@
     "ws": "7.3.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "eslint": "^9.21.0",
+    "eslint-config-prettier": "^10.0.2",
+    "eslint-plugin-prettier": "^5.2.3",
+    "globals": "^16.0.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.5.2",
     "serverless": "^3.38.0"
   }
 }
