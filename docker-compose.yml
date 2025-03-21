@@ -38,9 +38,9 @@ services:
       - docker-compose/app.env
     networks:
       - reader
-    ports:
-      - 8080:8080
 
+include:
+  - git@github.com:biblemesh/ereader-callback.git#16d35c3cc24b858910a9a7a7c1bb5ef14a0aeb52
 
 volumes:
   mysql-db:
