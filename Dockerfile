@@ -57,7 +57,7 @@ COPY ./ ./
 COPY --from=docs /docs/*.html docs/
 RUN ln -sv ./docs/README.html index.html
 
-HEALTHCHECK --interval=5s --timeout=10s --start-period=10s \
+HEALTHCHECK --interval=60s --timeout=10s --start-period=10s \
    CMD ["sh", "-c", "wget -O /dev/null http://127.0.0.1:8080/Shibboleth.sso/Metadata || exit 1"]
 
 CMD ["npm", "start"]
