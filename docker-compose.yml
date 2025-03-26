@@ -6,8 +6,25 @@ networks:
           gateway: 172.19.0.1
 
 services:
+  mysql_init:
+    image: biblemesh/shibboleth-common:1.0.0-dev
+    depends_on:
+      - common
+    build:
+      context: .
+      dockerfile: Dockerfile.certs
+    environment:
+      - SHIBBOLETH_IDENTITY_PROVIDER_HOST=op-sp-1.test  # FIXME use env file
+    volumes:
+      - ./add-data-to-sql-file.sh:/data/entrypoint.sh:ro
+      - ./seeds.sql:/data/seeds.sql:ro
+      - mysql-init-script:/data/output:rw
+    command: ["/data/entrypoint.sh"]
   mysql:
     image: bitnami/mysql:8.0.40
+    depends_on:
+      mysql_init:
+        condition: service_completed_successfully
     restart: always
     env_file: docker-compose/mysql.env
     environment:
@@ -16,7 +33,13 @@ services:
     volumes:
       - mysql-db:/bitnami/mysql/data
       - ./db_structure.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./seeds.sql:/docker-entrypoint-initdb.d/02-initdata.sql:ro
+      - type: volume
+        source: mysql-init-script
+        target: /docker-entrypoint-initdb.d/02-initdata.sql
+        read_only: true
+        volume:
+          nocopy: true
+          subpath: 02-initdata.sql
     networks:
       - reader
     healthcheck:
@@ -47,4 +70,5 @@ include:
   - git@github.com:biblemesh/ereader-callback.git#16d35c3cc24b858910a9a7a7c1bb5ef14a0aeb52
 
 volumes:
+  mysql-init-script:
   mysql-db:
