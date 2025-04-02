@@ -1,7 +1,7 @@
 # This file modified from https://gist.github.com/abstractvector/ed3f892ec0114e28b3d6dcdc4c39b1f2
 
 ARG ALPINE_VERSION=3.21
-ARG NODE_VERSION=gallium-alpine
+ARG NODE_VERSION=16
 
 ##########################
 # Cache-preserving image #
@@ -25,7 +25,7 @@ RUN (jq '.version = "1.0.0"' | jq '.packages."".version = "1.0.0"') < package-lo
 # Builder image #
 #################
 
-FROM node:${NODE_VERSION} AS builder
+FROM bitnami/node:${NODE_VERSION} AS builder
 
 WORKDIR /app
 
@@ -49,11 +49,30 @@ RUN find *.md -exec sh -c 'pandoc -t html5 "{}" > $(basename "{}" .md).html' \;
 # Development image #
 #####################
 
-FROM builder AS development
-LABEL org.opencontainers.image.source="https://github.com/biblemesh/toad-reader-server"
+# TODO switch to gcr.io/distroless after we upgrade to Node.js 18 (see ereader-callback Dockerfile)
+FROM node:${NODE_VERSION}-slim AS development
 
+ARG AUTHOR
+ARG DATETIMENOW
+ARG REVISION
+ARG RUNTIME_NODE_TAG
+ARG TAG_VERSION_NUMBER
+
+# https://github.com/opencontainers/image-spec/blob/main/annotations.md
+LABEL org.opencontainers.image.authors=${AUTHOR} \
+  org.opencontainers.image.base.name="node:${NODE_VERSION}-slim" \
+  org.opencontainers.image.created=${DATETIMENOW} \
+  org.opencontainers.image.description="eReader" \
+  org.opencontainers.image.source="https://github.com/biblemesh/toad-reader-server" \
+  org.opencontainers.image.revision=${REVISION:-unspecified} \
+  org.opencontainers.image.title="biblemesh/toad-reader-server" \
+  org.opencontainers.image.vendor="BI Ltd" \
+  org.opencontainers.image.version=${TAG_VERSION_NUMBER}
+
+WORKDIR /app
 COPY ./ ./
 
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=docs /docs/*.html docs/
 RUN ln -sv ./docs/README.html index.html
 
