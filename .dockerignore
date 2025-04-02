@@ -1,9 +1,9 @@
-.git/
+**/.nvmrc
 **/node_modules
 
 **/.DS_Store
-**/.env
-**/.git
+**/.env*
+**/.git*
 
 **/.npmrc
 **/.serverless
