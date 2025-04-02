@@ -15,3 +15,6 @@ node_modules
 
 # Temporary files
 tmp_epub_*
+
+# husky
+.husky/_
