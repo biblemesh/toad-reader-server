@@ -67,7 +67,8 @@ services:
       - reader
 
 include:
-  - git@github.com:biblemesh/ereader-callback.git#16d35c3cc24b858910a9a7a7c1bb5ef14a0aeb52
+  - path: git@github.com:biblemesh/ereader-callback.git#16d35c3cc24b858910a9a7a7c1bb5ef14a0aeb52
+    env_file: .env.callback
   - path: git@github.com:biblemesh/shibboleth.git#fb956493d0ebed2826fa96015093e4e0e2eedd48:.devcontainer/shibboleth/docker-compose.yml
     env_file: .env.shibboleth
 
