@@ -36,15 +36,6 @@ RUN npm clean-install
 
 COPY package.json .
 
-##################
-# Docs generator #
-##################
-FROM dcycle/md2html:2 AS docs
-
-WORKDIR /docs
-COPY *.md .
-RUN find *.md -exec sh -c 'pandoc -t html5 "{}" > $(basename "{}" .md).html' \;
-
 #####################
 # Development image #
 #####################
@@ -73,8 +64,7 @@ WORKDIR /app
 COPY ./ ./
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=docs /docs/*.html docs/
-RUN ln -sv ./docs/README.html index.html
+RUN echo "DEVELOPMENT index.html" > index.html
 
 HEALTHCHECK --interval=60s --timeout=10s --start-period=10s \
    CMD ["sh", "-c", "wget -O /dev/null http://127.0.0.1:8080/Shibboleth.sso/Metadata || exit 1"]
