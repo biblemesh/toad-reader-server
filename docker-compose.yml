@@ -26,10 +26,13 @@ services:
       mysql_init:
         condition: service_completed_successfully
     restart: always
-    env_file: docker-compose/mysql.env
     environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_USER=${RDS_USERNAME}
+      - MYSQL_PASSWORD=${RDS_PASSWORD}
+      - MYSQL_DATABASE=${RDS_DB_NAME}
       # TODO remove the next line when we support the new auth plugin
-      MYSQL_EXTRA_FLAGS: "--default-authentication-plugin=mysql_native_password"
+      - MYSQL_EXTRA_FLAGS="--default-authentication-plugin=mysql_native_password"
     volumes:
       - mysql-db:/bitnami/mysql/data
       - ./db_structure.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
@@ -61,8 +64,36 @@ services:
       - ./app.js:/app/app.js
       - ./src:/app/src
     init: true
-    env_file:
-      - docker-compose/app.env
+    environment:
+      - APP_PATH=${APP_PATH}
+      - APP_URL=${APP_URL}
+      - AUTH_METHOD_OVERRIDE=${AUTH_METHOD_OVERRIDE}
+      - AWS_KEY=${AWS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_SECRET=${AWS_SECRET}
+      - CLOUDFRONT_KEY_PAIR_ID=${CLOUDFRONT_KEY_PAIR_ID}
+      - CLOUDFRONT_PRIVATE_KEY=${CLOUDFRONT_PRIVATE_KEY}
+      - DEV_NETWORK_IP=${DEV_NETWORK_IP}
+      - IS_DEV=${IS_DEV}
+      - IS_STAGING=${IS_STAGING}
+      - LOGIN_TEST_CODE=${LOGIN_TEST_CODE}
+      - LOGIN_TEST_EMAIL=${LOGIN_TEST_EMAIL}
+      - LOGLEVEL=${LOGLEVEL}
+      - OVERRIDE_RDS_DB_NAME=${OVERRIDE_RDS_DB_NAME}
+      - OVERRIDE_RDS_HOSTNAME=${OVERRIDE_RDS_HOSTNAME}
+      - OVERRIDE_RDS_PASSWORD=${OVERRIDE_RDS_PASSWORD}
+      - OVERRIDE_RDS_PORT=${OVERRIDE_RDS_PORT}
+      - OVERRIDE_RDS_USERNAME=${OVERRIDE_RDS_USERNAME}
+      - PORT=${PORT:-8080}
+      - RDS_DB_NAME=${RDS_DB_NAME}
+      - RDS_HOSTNAME=${RDS_HOSTNAME}
+      - RDS_PASSWORD=${RDS_PASSWORD}
+      - RDS_PORT=${RDS_PORT}
+      - RDS_USERNAME=${RDS_USERNAME}
+      - REQUIRE_HTTPS=${REQUIRE_HTTPS}
+      - S3_BUCKET=${S3_BUCKET}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - WHITELISTED_EMAILS=${WHITELISTED_EMAILS}
     networks:
       - reader
 
