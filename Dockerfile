@@ -67,6 +67,6 @@ COPY --from=builder /app/node_modules ./node_modules
 RUN echo "DEVELOPMENT index.html" > index.html
 
 HEALTHCHECK --interval=60s --timeout=10s --start-period=10s \
-   CMD ["sh", "-c", "wget -O /dev/null http://127.0.0.1:8080/Shibboleth.sso/Metadata || exit 1"]
+   CMD ["node", "./healthcheck.js"]
 
 CMD ["npm", "start"]
