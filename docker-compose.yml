@@ -10,6 +10,7 @@ services:
       context: .
       dockerfile: Dockerfile.certs
     environment:
+      - EREADER_HOST=read.test
       - SHIBBOLETH_IDENTITY_PROVIDER_HOST=op-sp-1.test  # FIXME use env file
     volumes:
       - ./add-data-to-sql-file.sh:/data/entrypoint.sh:ro
@@ -23,12 +24,12 @@ services:
         condition: service_completed_successfully
     restart: always
     environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-      - MYSQL_USER=${RDS_USERNAME}
-      - MYSQL_PASSWORD=${RDS_PASSWORD}
-      - MYSQL_DATABASE=${RDS_DB_NAME}
+      ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_USER: ${RDS_USERNAME}
+      MYSQL_PASSWORD: ${RDS_PASSWORD}
+      MYSQL_DATABASE: ${RDS_DB_NAME}
       # TODO remove the next line when we support the new auth plugin
-      - MYSQL_EXTRA_FLAGS="--default-authentication-plugin=mysql_native_password"
+      MYSQL_EXTRA_FLAGS: "--default-authentication-plugin=mysql_native_password"
     volumes:
       - mysql-db:/bitnami/mysql/data
       - ./db_structure.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
