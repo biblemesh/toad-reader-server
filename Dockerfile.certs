@@ -1,7 +1,6 @@
 FROM biblemesh/shibboleth-common:1.0.0 AS shibboleth-common
-FROM ghcr.io/yasn77/envsubst-image:1.4.2 AS envsubst
 
-FROM busybox
+FROM alpine:3.21
+RUN apk --no-cache add envsubst
 WORKDIR /data
-COPY --from=envsubst /usr/bin/envsubst /usr/bin/envsubst
 COPY --from=shibboleth-common / .
