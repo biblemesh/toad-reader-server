@@ -1,9 +1,5 @@
 networks:
   reader:
-    ipam:
-      config:
-        - subnet: 172.19.0.0/16
-          gateway: 172.19.0.1
 
 services:
   mysql_init:
@@ -100,7 +96,7 @@ services:
 include:
   - path: git@github.com:biblemesh/ereader-callback.git#16d35c3cc24b858910a9a7a7c1bb5ef14a0aeb52
     env_file: .env.callback
-  - path: git@github.com:biblemesh/shibboleth.git#16c05cbc8331242a1cc0b1f1ceea7e341b95955f:.devcontainer/shibboleth/docker-compose.yml
+  - path: git@github.com:biblemesh/shibboleth.git#70e2f68fae56cab4c93ad36d04b4bb50eed4dd72:.devcontainer/shibboleth/docker-compose.yml
     env_file: .env.shibboleth
 
 volumes:
