@@ -1,0 +1,105 @@
+networks:
+  reader:
+
+services:
+  mysql_init:
+    image: biblemesh/shibboleth-common:1.0.0-dev
+    depends_on:
+      - common
+    build:
+      context: .
+      dockerfile: Dockerfile.certs
+    environment:
+      - EREADER_HOST=read.test
+      - SHIBBOLETH_IDENTITY_PROVIDER_HOST=op-sp-1.test  # FIXME use env file
+    volumes:
+      - ./add-data-to-sql-file.sh:/data/entrypoint.sh:ro
+      - ./seeds.sql:/data/seeds.sql:ro
+      - mysql-init-script:/data/output:rw
+    command: ["/data/entrypoint.sh"]
+  mysql:
+    image: bitnami/mysql:8.0.40
+    depends_on:
+      mysql_init:
+        condition: service_completed_successfully
+    restart: always
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_USER: ${RDS_USERNAME}
+      MYSQL_PASSWORD: ${RDS_PASSWORD}
+      MYSQL_DATABASE: ${RDS_DB_NAME}
+      # TODO remove the next line when we support the new auth plugin
+      MYSQL_EXTRA_FLAGS: "--default-authentication-plugin=mysql_native_password"
+    volumes:
+      - mysql-db:/bitnami/mysql/data
+      - ./db_structure.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - type: volume
+        source: mysql-init-script
+        target: /docker-entrypoint-initdb.d/02-initdata.sql
+        read_only: true
+        volume:
+          nocopy: true
+          subpath: 02-initdata.sql
+    networks:
+      - reader
+    healthcheck:
+      test: ['CMD', '/opt/bitnami/scripts/mysql/healthcheck.sh']
+      interval: 15s
+      timeout: 5s
+      retries: 6
+
+  reader:
+    image: biblemesh/toad-reader-server
+    depends_on:
+      mysql:
+        condition: service_healthy
+    build:
+      context: .
+      target: development
+    command: ["npm", "start"]
+    volumes:
+      - ./app.js:/app/app.js
+      - ./src:/app/src
+    init: true
+    environment:
+      - APP_PATH=${APP_PATH:-/index.html}
+      - APP_URL=${APP_URL}
+      - AUTH_METHOD_OVERRIDE=${AUTH_METHOD_OVERRIDE:-}
+      - AWS_KEY=${AWS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_SECRET=${AWS_SECRET}
+      - CLOUDFRONT_KEY_PAIR_ID=${CLOUDFRONT_KEY_PAIR_ID}
+      - CLOUDFRONT_PRIVATE_KEY=${CLOUDFRONT_PRIVATE_KEY}
+      - DEV_NETWORK_IP=${DEV_NETWORK_IP:-localhost}
+      - IS_DEV=${IS_DEV:-}
+      - IS_STAGING=${IS_STAGING}
+      - LOGIN_TEST_CODE=${LOGIN_TEST_CODE:-}
+      - LOGIN_TEST_EMAIL=${LOGIN_TEST_EMAIL:-}
+      - LOGLEVEL=${LOGLEVEL}
+      - OVERRIDE_RDS_DB_NAME=${OVERRIDE_RDS_DB_NAME:-}
+      - OVERRIDE_RDS_HOSTNAME=${OVERRIDE_RDS_HOSTNAME:-}
+      - OVERRIDE_RDS_PASSWORD=${OVERRIDE_RDS_PASSWORD:-}
+      - OVERRIDE_RDS_PORT=${OVERRIDE_RDS_PORT:-}
+      - OVERRIDE_RDS_USERNAME=${OVERRIDE_RDS_USERNAME:-}
+      - PORT=${PORT:-8080}
+      - RDS_DB_NAME=${RDS_DB_NAME}
+      - RDS_HOSTNAME=${RDS_HOSTNAME}
+      - RDS_PASSWORD=${RDS_PASSWORD}
+      - RDS_PORT=${RDS_PORT}
+      - RDS_USERNAME=${RDS_USERNAME}
+      - REQUIRE_HTTPS=${REQUIRE_HTTPS:-}
+      - S3_BUCKET=${S3_BUCKET}
+      - SESSION_SECRET=${SESSION_SECRET:-secret}
+      - WHITELISTED_EMAILS=${WHITELISTED_EMAILS}
+    networks:
+      - reader
+
+include:
+  - path: git@github.com:biblemesh/ereader-callback.git#16d35c3cc24b858910a9a7a7c1bb5ef14a0aeb52
+    env_file: .env.callback
+  - path: git@github.com:biblemesh/shibboleth.git#70e2f68fae56cab4c93ad36d04b4bb50eed4dd72:.devcontainer/shibboleth/docker-compose.yml
+    env_file: .env.shibboleth
+
+volumes:
+  mysql-init-script:
+  mysql-db:

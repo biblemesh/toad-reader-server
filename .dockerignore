@@ -1,0 +1,13 @@
+**/.nvmrc
+**/node_modules
+
+**/.DS_Store
+**/.env
+**/.git*
+
+**/.npmrc
+**/.serverless
+
+# Temporary files
+**/tmp_epub_*
+
