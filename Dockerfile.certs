@@ -1,0 +1,6 @@
+FROM biblemesh/shibboleth-common:1.0.0 AS shibboleth-common
+
+FROM alpine:3.21
+RUN apk --no-cache add envsubst
+WORKDIR /data
+COPY --from=shibboleth-common / .
