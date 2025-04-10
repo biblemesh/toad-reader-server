@@ -1,0 +1,71 @@
+name: Lint / Test / Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - 8/set-up-ci
+
+
+env:
+  DEFAULT_NODE_VERSION: 16.x
+
+permissions:
+  contents: read
+  #deployments: write
+  #packages: write
+
+jobs:
+
+  build:
+    name: ${{ matrix.action }} (${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [14.x, 16.x]
+        action: [lint, build]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache node modules
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.node-version }}-
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - run: npm ci
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: ci:${{ matrix.action }}
+        shell: bash
+        run: npm run ci:${{ matrix.action }}
+        env:
+          GITHASH: ${{ github.sha }}
+          GITHUB_REPO: ${{ github.repository }}
+          PYVERSION: ${{ matrix.python-version }}
+          BASE_BRANCH: ${{ github.base_ref || 'master' }}
+
+      - name: Log in and push images
+        if: matrix.action == 'build' && matrix.node-version == env.DEFAULT_NODE_VERSION
+        run: |
+          echo ${GITHUB_TOKEN} | docker login -u ${GITHUB_ACTOR} --password-stdin ghcr.io
+          export IMAGE_NAME=$(docker images --format {{.Repository}} | head -n1 | grep ghcr.io)
+          echo IMAGE_NAME=$IMAGE_NAME
+          if [ ! "$IMAGE_NAME" == "" ]; then docker push "$IMAGE_NAME" --all-tags; fi
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
