@@ -94,6 +94,7 @@ services:
       - WHITELISTED_EMAILS=${WHITELISTED_EMAILS}
     networks:
       - reader
+    restart: always
 
   minio:
     image: minio/minio:latest
