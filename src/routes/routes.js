@@ -196,7 +196,7 @@ module.exports = function (app, s3, passport, authFuncs, ensureAuthenticated, lo
   // serve epub asset files for dev
   app.get('/epub_content/**', (req, res, next) => {
 
-    if(!process.env.IS_DEV) return next()
+    if(!(process.env.IS_DEV || process.env.AWS_ENDPOINT?.contains("minio"))) return next()
 
     if(req.hasInitialCookiePathForEmbed) return next()
     // since, in this case, it needs to be authenticated;
