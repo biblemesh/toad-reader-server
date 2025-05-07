@@ -20,7 +20,7 @@ if(process.env.AWS_KEY && process.env.AWS_SECRET) {
   s3Config.accessKeyId = process.env.AWS_KEY
   s3Config.secretAccessKey = process.env.AWS_SECRET
 }
-if (process.env.S3_ENDPOINT) {
+if (process.env.USE_DEVELOPMENT_S3) {
   s3Config.endpoint = process.env.S3_ENDPOINT;
   s3Config.s3BucketEndpoint = true;
   s3Config.s3ForcePathStyle = true;
