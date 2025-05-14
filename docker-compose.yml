@@ -66,10 +66,10 @@ services:
       - APP_PATH=${APP_PATH:-/index.html}
       - APP_URL=${APP_URL}
       - AUTH_METHOD_OVERRIDE=${AUTH_METHOD_OVERRIDE:-}
-      - AWS_KEY=${AWS_KEY}
-      - EMAIL_AWS_REGION=${EMAIL_AWS_REGION}
-      - AWS_SECRET=${AWS_SECRET}
+      - S3_AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - S3_AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
       - S3_ENDPOINT=${S3_ENDPOINT}
+      - EMAIL_AWS_REGION=${EMAIL_AWS_REGION}
       - CLOUDFRONT_KEY_PAIR_ID=${CLOUDFRONT_KEY_PAIR_ID}
       - CLOUDFRONT_PRIVATE_KEY=${CLOUDFRONT_PRIVATE_KEY}
       - DEV_NETWORK_IP=${DEV_NETWORK_IP:-localhost}
@@ -122,7 +122,6 @@ services:
       sleep 5;
       /usr/bin/mc config host add s3 http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} --api S3v4;
       /usr/bin/mc mb --ignore-existing s3/${S3_BUCKET};
-      /usr/bin/mc admin accesskey create s3/ --access-key ${AWS_KEY} --secret-key ${AWS_SECRET} || true;
       exit 0;
       '
 
