@@ -18,8 +18,6 @@ functions:
     environment:
       ADMIN_EMAILS: ${param:ADMIN_EMAILS}
       APP_URL: ${param:APP_URL}
-      AWS_KEY: ${param:AWS_KEY}
-      AWS_SECRET: ${param:AWS_SECRET}
       CLOUDFRONT_KEY_PAIR_ID: ${param:CLOUDFRONT_KEY_PAIR_ID}
       CLOUDFRONT_PRIVATE_KEY: ${param:CLOUDFRONT_PRIVATE_KEY}
       IS_STAGING: ${param:IS_STAGING}
@@ -32,7 +30,12 @@ functions:
       DATABASE_PORT: ${param:DATABASE_PORT}
       DATABASE_USERNAME: ${param:DATABASE_USERNAME}
       REQUIRE_HTTPS: ${param:REQUIRE_HTTPS}
+      S3_ACCESS_KEY_ID: ${param:S3_ACCESS_KEY_ID}
       S3_BUCKET: ${param:S3_BUCKET}
+      S3_SECRET_ACCESS_KEY: ${param:S3_SECRET_ACCESS_KEY}
+      SES_ACCESS_KEY_ID: ${param:SES_ACCESS_KEY_ID}
+      SES_AWS_REGION: ${param:SES_AWS_REGION}
+      SES_SECRET_ACCESS_KEY: ${param:SES_SECRET_ACCESS_KEY}
       SESSION_SECRET: ${param:SESSION_SECRET}
   crons:
     handler: crons.handler
