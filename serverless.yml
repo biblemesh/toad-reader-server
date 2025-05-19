@@ -36,6 +36,7 @@ functions:
       SES_AWS_REGION: ${param:SES_AWS_REGION}
       SES_SECRET_ACCESS_KEY: ${param:SES_SECRET_ACCESS_KEY}
       SESSION_SECRET: ${param:SESSION_SECRET}
+      SUPPORT_EMAIL: ${param:SUPPORT_EMAIL}
   crons:
     handler: crons.handler
     # memorySize: 2048  # mb
