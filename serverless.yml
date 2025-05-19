@@ -16,7 +16,6 @@ functions:
     events:
       - httpApi: '*'
     environment:
-      ADMIN_EMAILS: ${param:ADMIN_EMAILS}
       APP_URL: ${param:APP_URL}
       CLOUDFRONT_KEY_PAIR_ID: ${param:CLOUDFRONT_KEY_PAIR_ID}
       CLOUDFRONT_PRIVATE_KEY: ${param:CLOUDFRONT_PRIVATE_KEY}
