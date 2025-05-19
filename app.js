@@ -367,7 +367,7 @@ readyPromises.push(
 
     if(!rows) {
       await sendEmail({
-        toAddrs: `support@toadreader.com`,
+        toAddrs: `${process.env.SUPPORT_EMAIL}`,
         subject: `SERVER ERROR: Could not run start-up query to create IDP endpoints`,
         body: `Fix this problem immediately as it means that tenants with Shibboleth cannot log in.`,
       })
