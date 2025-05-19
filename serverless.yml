@@ -16,7 +16,6 @@ functions:
     events:
       - httpApi: '*'
     environment:
-      APP_URL: ${param:APP_URL}
       CLOUDFRONT_KEY_PAIR_ID: ${param:CLOUDFRONT_KEY_PAIR_ID}
       CLOUDFRONT_PRIVATE_KEY: ${param:CLOUDFRONT_PRIVATE_KEY}
       DEFAULT_DOMAIN_TO_QUERY_FOR_EMAIL: {param:DEFAULT_DOMAIN_TO_QUERY_FOR_EMAIL}
@@ -25,6 +24,7 @@ functions:
       LOGIN_TEST_CODE: ${param:LOGIN_TEST_CODE}
       LOGIN_TEST_EMAIL: ${param:LOGIN_TEST_EMAIL}
       LOGLEVEL: ${param:LOGLEVEL}
+      MARKETING_URL: ${param:MARKETING_URL}
       DATABASE_NAME: ${param:DATABASE_NAME}
       DATABASE_HOSTNAME: ${param:DATABASE_HOSTNAME}
       DATABASE_PASSWORD: ${param:DATABASE_PASSWORD}

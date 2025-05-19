@@ -18,7 +18,7 @@ module.exports = function (app, s3, passport, authFuncs, ensureAuthenticated, lo
   //         if(rows.length == 0) {
   //           log(['IDP no longer exists', req.user.idpId], 2);
   //           if(redirectOnExpire) {
-  //             return res.redirect('https://' + process.env.APP_URL + '?domain_expired=1');
+  //             return res.redirect('https://' + process.env.MARKETING_URL + '?domain_expired=1');
   //           } else {
   //             return res.status(403).send({ errorType: "no_idp" });
   //           }
