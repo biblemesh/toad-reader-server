@@ -26,11 +26,11 @@ functions:
       LOGIN_TEST_CODE: ${param:LOGIN_TEST_CODE}
       LOGIN_TEST_EMAIL: ${param:LOGIN_TEST_EMAIL}
       LOGLEVEL: ${param:LOGLEVEL}
-      RDS_DB_NAME: ${param:RDS_DB_NAME}
-      RDS_HOSTNAME: ${param:RDS_HOSTNAME}
-      RDS_PASSWORD: ${param:RDS_PASSWORD}
-      RDS_PORT: ${param:RDS_PORT}
-      RDS_USERNAME: ${param:RDS_USERNAME}
+      DATABASE_NAME: ${param:DATABASE_NAME}
+      DATABASE_HOSTNAME: ${param:DATABASE_HOSTNAME}
+      DATABASE_PASSWORD: ${param:DATABASE_PASSWORD}
+      DATABASE_PORT: ${param:DATABASE_PORT}
+      DATABASE_USERNAME: ${param:DATABASE_USERNAME}
       REQUIRE_HTTPS: ${param:REQUIRE_HTTPS}
       S3_BUCKET: ${param:S3_BUCKET}
       SESSION_SECRET: ${param:SESSION_SECRET}
@@ -42,11 +42,11 @@ functions:
       - schedule: rate(1 minute)
     environment:
       IS_STAGING: ${param:IS_STAGING}
-      RDS_DB_NAME: ${param:RDS_DB_NAME}
-      RDS_HOSTNAME: ${param:RDS_HOSTNAME}
-      RDS_PASSWORD: ${param:RDS_PASSWORD}
-      RDS_PORT: ${param:RDS_PORT}
-      RDS_USERNAME: ${param:RDS_USERNAME}
+      DATABASE_NAME: ${param:DATABASE_NAME}
+      DATABASE_HOSTNAME: ${param:DATABASE_HOSTNAME}
+      DATABASE_PASSWORD: ${param:DATABASE_PASSWORD}
+      DATABASE_PORT: ${param:DATABASE_PORT}
+      DATABASE_USERNAME: ${param:DATABASE_USERNAME}
       REQUIRE_HTTPS: ${param:REQUIRE_HTTPS}
       S3_BUCKET: ${param:S3_BUCKET}
       SESSION_SECRET: ${param:SESSION_SECRET}
