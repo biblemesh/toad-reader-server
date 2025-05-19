@@ -31,11 +31,11 @@ if (process.env.USE_DEVELOPMENT_S3) {
 const s3 = new AWS.S3(s3Config)
 
 const mySqlSessionOptions = {
-  host: process.env.OVERRIDE_RDS_HOSTNAME || process.env.RDS_HOSTNAME,
-  port: process.env.OVERRIDE_RDS_PORT || process.env.RDS_PORT,
-  user: process.env.OVERRIDE_RDS_USERNAME || process.env.RDS_USERNAME,
-  password: process.env.OVERRIDE_RDS_PASSWORD || process.env.RDS_PASSWORD,
-  database: process.env.OVERRIDE_RDS_DB_NAME || process.env.RDS_DB_NAME,
+  host: process.env.OVERRIDE_DATABASE_HOSTNAME || process.env.DATABASE_HOSTNAME,
+  port: process.env.OVERRIDE_DATABASE_PORT || process.env.DATABASE_PORT,
+  user: process.env.OVERRIDE_DATABASE_USERNAME || process.env.DATABASE_USERNAME,
+  password: process.env.OVERRIDE_DATABASE_PASSWORD || process.env.DATABASE_PASSWORD,
+  database: process.env.OVERRIDE_DATABASE_NAME || process.env.DATABASE_NAME,
 }
 
 var getXapiActor = function(params) {
@@ -232,11 +232,11 @@ const openConnection = () => {
   console.log(`Establish connection pool`)
 
   global.connection = mysql.createPool({
-    host: process.env.OVERRIDE_RDS_HOSTNAME || process.env.RDS_HOSTNAME,
-    port: process.env.OVERRIDE_RDS_PORT || process.env.RDS_PORT,
-    user: process.env.OVERRIDE_RDS_USERNAME || process.env.RDS_USERNAME,
-    password: process.env.OVERRIDE_RDS_PASSWORD || process.env.RDS_PASSWORD,
-    database: process.env.OVERRIDE_RDS_DB_NAME || process.env.RDS_DB_NAME,
+    host: process.env.OVERRIDE_DATABASE_HOSTNAME || process.env.DATABASE_HOSTNAME,
+    port: process.env.OVERRIDE_DATABASE_PORT || process.env.DATABASE_PORT,
+    user: process.env.OVERRIDE_DATABASE_USERNAME || process.env.DATABASE_USERNAME,
+    password: process.env.OVERRIDE_DATABASE_PASSWORD || process.env.DATABASE_PASSWORD,
+    database: process.env.OVERRIDE_DATABASE_NAME || process.env.DATABASE_NAME,
     multipleStatements: true,
     dateStrings: true,
     charset : 'utf8mb4',
