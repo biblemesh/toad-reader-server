@@ -13,12 +13,7 @@
     "go-deploy-production": "(echo '--------------------\nDeploy production...\n--------------------\n' && npm run confirm && npx serverless deploy --stage production) || true",
     "go-deploy-staging": "(echo '-----------------\nDeploy staging...\n-----------------\n' && npm run confirm && npx serverless deploy --stage staging) || true",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "prepare": "husky install",
-    "start": "node --expose-gc ./app.js",
-    "translate": "node node_modules/inline-i18n/scripts/makeTranslationFiles.js --parse-dirs='src' && npm run translate-convert-json-to-csv",
-    "translate-convert-csv-to-json": "node node_modules/inline-i18n/scripts/convertTranslationCSVtoJSON.js",
-    "translate-convert-json-to-csv": "node node_modules/inline-i18n/scripts/convertTranslationJSONtoCSV.js"
+    "lint:fix": "eslint . --fix"
   },
   "lint-staged": {
     "*.+(json|css|md|scss)": [
