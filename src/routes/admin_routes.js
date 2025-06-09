@@ -825,7 +825,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
       }).promise()
       epubSizeInMebibyte += data.ObjectSize/1024/1024
     }))
-    epubSizeInMebibyte = Math.ceil(epubSizeInMebibyte, 10)
+    epubSizeInMebibyte = Math.ceil(epubSizeInMebibyte)
 
     if(epubSizeInMebibyte > MAX_AUDIOBOOK_MEBIBYTE) {
       res.status(400).send({
