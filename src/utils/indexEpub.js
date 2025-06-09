@@ -94,7 +94,7 @@ const getIndexedBook = async ({ baseUri, spines, log }) => {
 
   const indexObj = currentMiniSearch.toJSON()
   const jsonStr = JSON.stringify(indexObj)
-  const mebibyteSize = parseInt((jsonStr.length / mebibyte) + .5, 10)
+  const mebibyteSize = parseInt(Math.ceil(jsonStr.length / mebibyte), 10)
 
   if(mebibyteSize > 50) {
     throw new Error(`EPUB content too massive (~${mebibyteSize} MiB) to create a search index: ${baseUri}`)
