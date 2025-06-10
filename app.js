@@ -33,6 +33,7 @@ const log = function(msgs, importanceLevel) {
     console.log.apply(this, msgs)
   }
 }
+
 const sessionParser = util.session({
   store: util.sessionStore,
   secret: process.env.SESSION_SECRET || 'secret',
@@ -78,6 +79,16 @@ const s3 = util.s3
 
 // ensure db connection for initial tasks
 readyPromises.push(util.getValidConnection())
+
+// ensure session store is ready
+readyPromises.push(
+  util.sessionStore.onReady().then(() => {
+    log(['Session store ready'], 1)
+  }).catch(error => {
+    log(['Session store error', error], 3)
+    throw error
+  })
+)
 
 app.use(async (req, res, next) => {
   // on each request, ensure db connection is working
