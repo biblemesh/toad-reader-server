@@ -13,6 +13,7 @@
     "format:check": "prettier --check .",
     "go-deploy-production": "(echo '--------------------\nDeploy production...\n--------------------\n' && npm run confirm && npx serverless deploy --stage production) || true",
     "go-deploy-staging": "(echo '-----------------\nDeploy staging...\n-----------------\n' && npm run confirm && npx serverless deploy --stage staging) || true",
+    "health-check": "node ./healthcheck.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "husky",
