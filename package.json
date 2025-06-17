@@ -35,8 +35,8 @@
     ]
   },
   "dependencies": {
-    "@sentry/node": "^9.2.0",
-    "@sentry/profiling-node": "^9.2.0",
+    "@sentry/node": "^8.55.0",
+    "@sentry/profiling-node": "^8.55.0",
     "@shopify/shopify-api": "^6.2.0",
     "adm-zip": "0.4.13",
     "array-flat-polyfill": "^1.0.1",
