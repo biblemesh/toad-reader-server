@@ -18,8 +18,8 @@ functions:
     environment:
       ADMIN_EMAILS: ${param:ADMIN_EMAILS}
       APP_URL: ${param:APP_URL}
-      AWS_ACCESS_KEY_ID: ${param:AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${param:AWS_SECRET_ACCESS_KEY}
+      AWS_KEY: ${param:AWS_KEY}
+      AWS_SECRET: ${param:AWS_SECRET}
       CLOUDFRONT_KEY_PAIR_ID: ${param:CLOUDFRONT_KEY_PAIR_ID}
       CLOUDFRONT_PRIVATE_KEY: ${param:CLOUDFRONT_PRIVATE_KEY}
       IS_STAGING: ${param:IS_STAGING}

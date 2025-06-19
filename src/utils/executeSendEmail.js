@@ -4,9 +4,9 @@ const AWS = require('aws-sdk')
 const sesConfig = {
   region: process.env.SES_AWS_REGION || 'us-east-1',
 }
-if(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
-  sesConfig.accessKeyId = process.env.AWS_ACCESS_KEY_ID
-  sesConfig.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
+if(process.env.AWS_KEY && process.env.AWS_SECRET) {
+  sesConfig.accessKeyId = process.env.AWS_KEY
+  sesConfig.secretAccessKey = process.env.AWS_SECRET
 }
 const SES = new AWS.SES(sesConfig)
 

@@ -16,12 +16,12 @@ const getShopifyUserInfo = require('./getShopifyUserInfo')
 const API_VERSION = '1.0'
 
 const s3Config = {}
-if(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
-  s3Config.accessKeyId = process.env.AWS_ACCESS_KEY_ID
-  s3Config.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
-} else if (process.env.S3_AWS_ACCESS_KEY_ID && process.env.S3_AWS_SECRET_ACCESS_KEY) {
-  s3Config.accessKeyId = process.env.S3_AWS_ACCESS_KEY_ID
-  s3Config.secretAccessKey = process.env.S3_AWS_SECRET_ACCESS_KEY
+if(process.env.AWS_KEY && process.env.AWS_SECRET) {
+  s3Config.accessKeyId = process.env.AWS_KEY
+  s3Config.secretAccessKey = process.env.AWS_SECRET
+} else if (process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY) {
+  s3Config.accessKeyId = process.env.S3_ACCESS_KEY_ID
+  s3Config.secretAccessKey = process.env.S3_SECRET_ACCESS_KEY
 }
 if (process.env.USE_DEVELOPMENT_S3) {
   s3Config.endpoint = process.env.S3_ENDPOINT;
