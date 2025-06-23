@@ -2,7 +2,7 @@ const AWS = require('aws-sdk')
 
 // SES setup
 const sesConfig = {
-  region: process.env.AWS_REGION || 'us-east-1',
+  region: process.env.SES_AWS_REGION || 'us-east-1',
 }
 if(process.env.AWS_KEY && process.env.AWS_SECRET) {
   sesConfig.accessKeyId = process.env.AWS_KEY
