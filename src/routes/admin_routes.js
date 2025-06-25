@@ -11,8 +11,8 @@ const util = require('../utils/util')
 const parseEpub = require('../utils/parseEpub')
 const { getIndexedBook } = require('../utils/indexEpub')
 
-const MAX_AUDIOBOOK_FILE_MB = 50  // over an hour, on average
-const MAX_AUDIOBOOK_MB = 750
+const MAX_AUDIOBOOK_FILE_MEBIBYTE = 50  // over an hour, on average
+const MAX_AUDIOBOOK_MEBIBYTE = 750
 
 // to avoid a memory error, taken from here: https://github.com/jimp-dev/jimp/issues/915
 const cachedJpegDecoder = Jimp.decoders['image/jpeg']
@@ -252,9 +252,9 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
         }
 
         const priceMatch = filename.match(/\$([0-9]+)\.([0-9]{2})(\.[^\.]+)?$/)
-        const epubSizeInMB = Math.ceil(file.size/1024/1024)
+        const epubSizeInMebibyte = Math.ceil(file.size/1024/1024)
 
-        if(epubSizeInMB > req.user.idpMaxMBPerBook) {
+        if(epubSizeInMebibyte > req.user.idpMaxMBPerBook) {
           throw new Error(`file_too_large`)
         }
 
@@ -262,7 +262,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
           title: 'Unknown',
           author: '',
           isbn: '',
-          epubSizeInMB,
+          epubSizeInMB: epubSizeInMebibyte,
           standardPriceInCents: priceMatch ? (priceMatch[1] + priceMatch[2]) : null,
           updated_at: util.timestampToMySQLDatetime()
         }
@@ -653,9 +653,9 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
             return
           }
 
-          const fileSizeInMB = Math.ceil(file.size/1024/1024)
+          const fileSizeInMebibyte = Math.ceil(file.size/1024/1024)
 
-          if(fileSizeInMB > req.user.idpMaxMBPerFile) {
+          if(fileSizeInMebibyte > req.user.idpMaxMBPerFile) {
             res.status(400).send({
               errorType: "file_too_large",
               maxMB: req.user.idpMaxMBPerFile,
@@ -816,27 +816,27 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
       return
     }
 
-    let epubSizeInMB = 0
+    let epubSizeInMebibyte = 0
     await Promise.all(req.body.book.audiobookInfo.spines.map(async ({ filename }) => {
       const data = await s3.getObjectAttributes({
         Bucket: process.env.S3_BUCKET,
         Key: `epub_content/book_${req.body.book.id}/${filename}`,
         ObjectAttributes: [ `ObjectSize` ],
       }).promise()
-      epubSizeInMB += data.ObjectSize/1024/1024
+      epubSizeInMebibyte += data.ObjectSize/1024/1024
     }))
-    epubSizeInMB = Math.ceil(epubSizeInMB, 10)
+    epubSizeInMebibyte = Math.ceil(epubSizeInMebibyte)
 
-    if(epubSizeInMB > MAX_AUDIOBOOK_MB) {
+    if(epubSizeInMebibyte > MAX_AUDIOBOOK_MEBIBYTE) {
       res.status(400).send({
-        errorMessage: `Total size of this audiobook exceeds ${MAX_AUDIOBOOK_MB} mb max.`,
+        errorMessage: `Total size of this audiobook exceeds ${MAX_AUDIOBOOK_MEBIBYTE} MiB max.`,
       })
       return
     }
 
     bookRow = {
       ...req.body.book,
-      epubSizeInMB,
+      epubSizeInMB: epubSizeInMebibyte,
       updated_at: util.timestampToMySQLDatetime()
     }
 
@@ -949,10 +949,10 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
 
         } else {
 
-          if(Math.ceil(file.size/1024/1024) > MAX_AUDIOBOOK_FILE_MB) {
+          if(Math.ceil(file.size/1024/1024) > MAX_AUDIOBOOK_FILE_MEBIBYTE) {
             res.status(400).send({
               errorType: "file_too_large",
-              maxMB: MAX_AUDIOBOOK_FILE_MB,
+              maxMB: MAX_AUDIOBOOK_FILE_MEBIBYTE,
             })
             return
           }

@@ -16,10 +16,7 @@ const getShopifyUserInfo = require('./getShopifyUserInfo')
 const API_VERSION = '1.0'
 
 const s3Config = {}
-if(process.env.AWS_KEY && process.env.AWS_SECRET) {
-  s3Config.accessKeyId = process.env.AWS_KEY
-  s3Config.secretAccessKey = process.env.AWS_SECRET
-} else if (process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY) {
+if (process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY) {
   s3Config.accessKeyId = process.env.S3_ACCESS_KEY_ID
   s3Config.secretAccessKey = process.env.S3_SECRET_ACCESS_KEY
 }
@@ -31,11 +28,11 @@ if (process.env.USE_DEVELOPMENT_S3) {
 const s3 = new AWS.S3(s3Config)
 
 const mySqlSessionOptions = {
-  host: process.env.OVERRIDE_RDS_HOSTNAME || process.env.RDS_HOSTNAME,
-  port: process.env.OVERRIDE_RDS_PORT || process.env.RDS_PORT,
-  user: process.env.OVERRIDE_RDS_USERNAME || process.env.RDS_USERNAME,
-  password: process.env.OVERRIDE_RDS_PASSWORD || process.env.RDS_PASSWORD,
-  database: process.env.OVERRIDE_RDS_DB_NAME || process.env.RDS_DB_NAME,
+  host: process.env.OVERRIDE_DATABASE_HOSTNAME || process.env.DATABASE_HOSTNAME,
+  port: process.env.OVERRIDE_DATABASE_PORT || process.env.DATABASE_PORT,
+  user: process.env.OVERRIDE_DATABASE_USERNAME || process.env.DATABASE_USERNAME,
+  password: process.env.OVERRIDE_DATABASE_PASSWORD || process.env.DATABASE_PASSWORD,
+  database: process.env.OVERRIDE_DATABASE_NAME || process.env.DATABASE_NAME,
 }
 
 var getXapiActor = function(params) {
@@ -124,98 +121,6 @@ var getXapiContext = function(params) {
   };
 }
 
-const convertBase = ({ str, fromBase, toBase }) => {
-  // Based off an answer here: https://stackoverflow.com/questions/1337419/how-do-you-convert-numbers-between-different-bases-in-javascript
-  // Needed because (1) javascript only does up to base 36, and (2) I needed to customize the digits to what is below.
-
-  const DIGITS = "0123456789abcdefghijklmnopqrstuvwxyz-.";
-
-  const add = (x, y, base) => {
-      let z = [];
-      const n = Math.max(x.length, y.length);
-      let carry = 0;
-      let i = 0;
-      while (i < n || carry) {
-          const xi = i < x.length ? x[i] : 0;
-          const yi = i < y.length ? y[i] : 0;
-          const zi = carry + xi + yi;
-          z.push(zi % base);
-          carry = Math.floor(zi / base);
-          i++;
-      }
-      return z;
-  }
-
-  const multiplyByNumber = (num, x, base) => {
-      if (num < 0) return null;
-      if (num == 0) return [];
-
-      let result = [];
-      let power = x;
-      while (true) {
-          num & 1 && (result = add(result, power, base));
-          num = num >> 1;
-          if (num === 0) break;
-          power = add(power, power, base);
-      }
-
-      return result;
-  }
-
-  const parseToDigitsArray = (str, base) => {
-      const digits = str.split('');
-      let arr = [];
-      for (let i = digits.length - 1; i >= 0; i--) {
-          const n = DIGITS.indexOf(digits[i])
-          if (n == -1) return null;
-          arr.push(n);
-      }
-      return arr;
-  }
-
-  const digits = parseToDigitsArray(str, fromBase);
-  if (digits === null) return null;
-
-  let outArray = [];
-  let power = [1];
-  for (let i = 0; i < digits.length; i++) {
-      digits[i] && (outArray = add(outArray, multiplyByNumber(digits[i], power, toBase), toBase));
-      power = multiplyByNumber(fromBase, power, toBase);
-  }
-
-  let out = '';
-  for (let i = outArray.length - 1; i >= 0; i--)
-      out += DIGITS[outArray[i]];
-
-  return out;
-}
-
-const dashifyDomain = domain => domain
-  .replace(/-/g, '--')
-  .replace(/\./g, '-')
-
-const undashifyDomain = dashedDomain => dashedDomain
-  .replace(/--/g, '[ DASH ]')
-  .replace(/-/g, '.')
-  .replace(/\[ DASH \]/g, '-')
-
-// old param is temporary
-const encodeDomain = (domain, old) => {
-  if(old) {
-    return dashifyDomain(domain)
-  } else {
-    return convertBase({ str: domain, fromBase: 38, toBase: 36 })
-  }
-}
-
-const decodeDomain = encodedDomain => {
-  if(/-/.test(encodedDomain)) {
-    return undashifyDomain(encodedDomain)
-  } else {
-    return convertBase({ str: encodedDomain, fromBase: 36, toBase: 38 })
-  }
-}
-
 const jsonCols = {
   tool: [ 'data', 'undo_array' ],
   classroom: [ 'syllabus', 'draftData', 'lti_configurations' ],
@@ -232,11 +137,11 @@ const openConnection = () => {
   console.log(`Establish connection pool`)
 
   global.connection = mysql.createPool({
-    host: process.env.OVERRIDE_RDS_HOSTNAME || process.env.RDS_HOSTNAME,
-    port: process.env.OVERRIDE_RDS_PORT || process.env.RDS_PORT,
-    user: process.env.OVERRIDE_RDS_USERNAME || process.env.RDS_USERNAME,
-    password: process.env.OVERRIDE_RDS_PASSWORD || process.env.RDS_PASSWORD,
-    database: process.env.OVERRIDE_RDS_DB_NAME || process.env.RDS_DB_NAME,
+    host: process.env.OVERRIDE_DATABASE_HOSTNAME || process.env.DATABASE_HOSTNAME,
+    port: process.env.OVERRIDE_DATABASE_PORT || process.env.DATABASE_PORT,
+    user: process.env.OVERRIDE_DATABASE_USERNAME || process.env.DATABASE_USERNAME,
+    password: process.env.OVERRIDE_DATABASE_PASSWORD || process.env.DATABASE_PASSWORD,
+    database: process.env.OVERRIDE_DATABASE_NAME || process.env.DATABASE_NAME,
     multipleStatements: true,
     dateStrings: true,
     charset : 'utf8mb4',
@@ -407,7 +312,12 @@ const util = {
   // (For other things, use getDataOrigin and getFrontEndOrigin.)
   getBackendBaseUrl: req => `${util.getProtocol({ req })}://${req.headers.host}`,
   getFrontendBaseUrl: req => {
-    if(req.headers.host.split('.')[2] === 'staging') {
+    // getFrontendBaseUrl used to return 'https://null' for dev
+    if (req.headers.host.includes('localhost')) {
+      return util.getFrontEndOrigin({ req, env: 'dev' })
+    }
+
+    if(req.headers.host.split('.')[1] === 'stg') {
       return util.getFrontEndOrigin({ req, env: 'staging' })
     } else {
       return `${util.getProtocol({ req })}://${util.getIDPDomain(req)}`
@@ -464,22 +374,21 @@ const util = {
     });
   },
 
+  // TODO remove old
   // old param is temporary
   getDataDomain: ({ domain, env, old }) => {
-
     if(env ? env === 'dev' : process.env.IS_DEV) {
       // dev environment
       return `${process.env.DEV_NETWORK_IP || `localhost`}:8080`
     }
-  
-    if(env ? env === 'staging' : (process.env.IS_STAGING === `1`)) {
+
+    if(env ? env === 'staging' : (process.env.IS_STAGING === `true`)) {
       // staging environment
-      return `${encodeDomain(domain, old)}.data.staging.toadreader.com`
+      return `data.stg.${domain}`
     }
-  
+
     // production or beta environment
-    return `${encodeDomain(domain, old)}.data.toadreader.com`
-  
+    return `data.${domain}`
   },
 
   // old param is temporary
@@ -491,31 +400,35 @@ const util = {
     }://${util.getDataDomain({ domain, env, old })}`
   ),
 
-  getIDPDomain: ({ host, env }) => (
-    (env ? env === 'dev' : process.env.IS_DEV)
-      ? `${process.env.DEV_NETWORK_IP || `localhost`}:19006`
-      : decodeDomain(host.split('.')[0])
-  ),
+  getIDPDomain: ({ host, env }) => {
+    if(env ? env === 'dev' : process.env.IS_DEV) {
+      return `${process.env.DEV_NETWORK_IP || `localhost`}:19006`
+    }
+
+    if(env ? env === 'staging' : (process.env.IS_STAGING === `true`)) {
+      return host.slice("data.stg.".length)
+    }
+
+    return host.slice("data.".length)
+  },
 
   getFrontEndOrigin: ({ req, env }) => {
-
     let domain = util.getIDPDomain({ host: req.headers.host, env })
 
     if(env ? env === 'dev' : process.env.IS_DEV) {
       domain = `${process.env.DEV_NETWORK_IP || `localhost`}:19006`
     }
 
-    if(env ? env === 'staging' : (process.env.IS_STAGING === `1`)) {
-      domain = `${dashifyDomain(domain)}.staging.toadreader.com`
+    if(env ? env === 'staging' : (process.env.IS_STAGING === `true`)) {
+      domain = `stg.${domain}`
     }
 
-    const betaUrlMatch = (req.headers.referer || "").match(/^https?:\/\/([^\/.]*\.beta\.toadreader\.com)(\/|$)/)
+    const betaUrlMatch = (req.headers.referer || "").match(/^https?:\/\/(beta\.[^\/]*)(\/|$)/)
     if(env ? env === 'beta' : (betaUrlMatch || req.query.isBeta)) {
-      domain = `${dashifyDomain(domain)}.beta.toadreader.com`
+      domain = `beta.${domain}`
     }
 
     return `${util.getProtocol({ req, env })}://${domain}`
-
   },
 
   escapeHTML: text => (

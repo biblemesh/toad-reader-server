@@ -3,7 +3,7 @@
 const http = require('http');
 
 http
-  .get('http://127.0.0.1:8080/Shibboleth.sso/Metadata', (res) => {
+  .get(`http://127.0.0.1:${parseInt(process.env.PORT, 10) || process.env.PORT || 8080}/Shibboleth.sso/Metadata`, (res) => {
     console.log('statusCode', res.statusCode);
     if (res.statusCode === 200) {
       process.exit(0);
