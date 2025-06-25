@@ -24,7 +24,9 @@ const getIndexedBook = async ({ baseUri, spines, log }) => {
 
   global.gc && global.gc()
 
-  log(`SearchIndexing: preparing to begin indexing // Current memory usage: ${parseInt(process.memoryUsage().rss/1000000)} mb`)
+  const mebibyte = 1024 * 1024
+
+  log(`SearchIndexing: preparing to begin indexing // Current memory usage: ${parseInt(process.memoryUsage().rss / mebibyte)} MiB`)
 
   for(let spine of spines) {
     const spineItemPath = `${baseUri}/${spine.path}`
@@ -36,7 +38,7 @@ const getIndexedBook = async ({ baseUri, spines, log }) => {
       process.stdout.cursorTo(0)
       process.stdout.write(`SearchIndexing: Parsing spine ${spineIndex} of ${spines.length}`)
     } catch(e) {
-      // log([`SearchIndexing: Parsing spine ${spineIndex} of ${spines.length} (document index: ${documentIndex})`, `${parseInt(process.memoryUsage().rss/1000000)} mb`])
+      // log([`SearchIndexing: Parsing spine ${spineIndex} of ${spines.length} (document index: ${documentIndex})`, `${parseInt(process.memoryUsage().rss / mebibyte)} MiB`])
     }
 
     try {
@@ -64,18 +66,19 @@ const getIndexedBook = async ({ baseUri, spines, log }) => {
       throw new Error(`Search indexing taking too long. Got through ${spineIndex} of ${spines.length} spines. Giving up: ${baseUri}`)
     }
 
-    const memoryUsageInMB = parseInt(process.memoryUsage().rss/1000000)
+    const memoryUsageInMebibyte = parseInt(process.memoryUsage().rss / mebibyte)
+    const garbageCollectionThresholdInMebibyte = 2048
 
-    if(memoryUsageInMB > 3072) {
-      throw new Error(`EPUB search index overloading memory (~${memoryUsageInMB} mb)`)
+    if(memoryUsageInMebibyte > 3072) {
+      throw new Error(`EPUB search index overloading memory (~${memoryUsageInMebibyte} MiB)`)
 
-    } else if(global.gc && spineIndex % 10 === 0 && memoryUsageInMB > 2048) {
+    } else if (global.gc && spineIndex % 10 === 0 && memoryUsageInMebibyte > garbageCollectionThresholdInMebibyte) {
       try {
         process.stdout.clearLine()
         process.stdout.cursorTo(0)
       } catch(e) {}
-          
-      log(`Collect garbage as memory exceeding 250 mb (currently ~${memoryUsageInMB} mb)...`)
+
+      log(`Collect garbage as memory exceeding ${garbageCollectionThresholdInMebibyte} MiB (currently ~${memoryUsageInMebibyte} MiB)...`)
       global.gc()
     }
 
@@ -86,24 +89,24 @@ const getIndexedBook = async ({ baseUri, spines, log }) => {
     process.stdout.cursorTo(0)
   } catch(e) {}
 
-  log(`SearchIndexing: parsing done // Current memory usage: ${parseInt(process.memoryUsage().rss/1000000)} mb`)
+  log(`SearchIndexing: parsing done // Current memory usage: ${parseInt(process.memoryUsage().rss / mebibyte)} MiB`)
   log(`SearchIndexing: converting to JSON...`)
 
   const indexObj = currentMiniSearch.toJSON()
   const jsonStr = JSON.stringify(indexObj)
-  const mbSize = parseInt((jsonStr.length / (1000 * 1000)) + .5, 10)
+  const mebibyteSize = parseInt(Math.ceil(jsonStr.length / mebibyte), 10)
 
-  if(mbSize > 50) {
-    throw new Error(`EPUB content too massive (~${mbSize} mb) to create a search index: ${baseUri}`)
+  if(mebibyteSize > 50) {
+    throw new Error(`EPUB content too massive (~${mebibyteSize} MiB) to create a search index: ${baseUri}`)
   }
 
-  log([`SearchIndexing: index creation complete (~${mbSize} mb)`])
+  log([`SearchIndexing: index creation complete (~${mebibyteSize} MiB)`])
 
   return {
     indexObj,
     jsonStr,
     searchTermCounts,
-    noOfflineSearch: mbSize > 25,  // Indicates that there should not be an offline search index available, since it is too large for a phone.
+    noOfflineSearch: mebibyteSize > 25,  // Indicates that there should not be an offline search index available, since it is too large for a phone.
   }
 }
 

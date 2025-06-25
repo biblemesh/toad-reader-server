@@ -16,24 +16,29 @@ functions:
     events:
       - httpApi: '*'
     environment:
-      ADMIN_EMAILS: ${param:ADMIN_EMAILS}
-      APP_URL: ${param:APP_URL}
-      AWS_KEY: ${param:AWS_KEY}
-      AWS_SECRET: ${param:AWS_SECRET}
       CLOUDFRONT_KEY_PAIR_ID: ${param:CLOUDFRONT_KEY_PAIR_ID}
       CLOUDFRONT_PRIVATE_KEY: ${param:CLOUDFRONT_PRIVATE_KEY}
+      DEFAULT_DOMAIN_TO_QUERY_FOR_EMAIL: {param:DEFAULT_DOMAIN_TO_QUERY_FOR_EMAIL}
+      DEFAULT_FROM_EMAIL: ${param:DEFAULT_FROM_EMAIL}
       IS_STAGING: ${param:IS_STAGING}
       LOGIN_TEST_CODE: ${param:LOGIN_TEST_CODE}
       LOGIN_TEST_EMAIL: ${param:LOGIN_TEST_EMAIL}
       LOGLEVEL: ${param:LOGLEVEL}
-      RDS_DB_NAME: ${param:RDS_DB_NAME}
-      RDS_HOSTNAME: ${param:RDS_HOSTNAME}
-      RDS_PASSWORD: ${param:RDS_PASSWORD}
-      RDS_PORT: ${param:RDS_PORT}
-      RDS_USERNAME: ${param:RDS_USERNAME}
+      MARKETING_URL: ${param:MARKETING_URL}
+      DATABASE_NAME: ${param:DATABASE_NAME}
+      DATABASE_HOSTNAME: ${param:DATABASE_HOSTNAME}
+      DATABASE_PASSWORD: ${param:DATABASE_PASSWORD}
+      DATABASE_PORT: ${param:DATABASE_PORT}
+      DATABASE_USERNAME: ${param:DATABASE_USERNAME}
       REQUIRE_HTTPS: ${param:REQUIRE_HTTPS}
+      S3_ACCESS_KEY_ID: ${param:S3_ACCESS_KEY_ID}
       S3_BUCKET: ${param:S3_BUCKET}
+      S3_SECRET_ACCESS_KEY: ${param:S3_SECRET_ACCESS_KEY}
+      SES_ACCESS_KEY_ID: ${param:SES_ACCESS_KEY_ID}
+      SES_AWS_REGION: ${param:SES_AWS_REGION}
+      SES_SECRET_ACCESS_KEY: ${param:SES_SECRET_ACCESS_KEY}
       SESSION_SECRET: ${param:SESSION_SECRET}
+      SUPPORT_EMAIL: ${param:SUPPORT_EMAIL}
   crons:
     handler: crons.handler
     # memorySize: 2048  # mb
@@ -42,11 +47,13 @@ functions:
       - schedule: rate(1 minute)
     environment:
       IS_STAGING: ${param:IS_STAGING}
-      RDS_DB_NAME: ${param:RDS_DB_NAME}
-      RDS_HOSTNAME: ${param:RDS_HOSTNAME}
-      RDS_PASSWORD: ${param:RDS_PASSWORD}
-      RDS_PORT: ${param:RDS_PORT}
-      RDS_USERNAME: ${param:RDS_USERNAME}
+      DATABASE_NAME: ${param:DATABASE_NAME}
+      DATABASE_HOSTNAME: ${param:DATABASE_HOSTNAME}
+      DATABASE_PASSWORD: ${param:DATABASE_PASSWORD}
+      DATABASE_PORT: ${param:DATABASE_PORT}
+      DATABASE_USERNAME: ${param:DATABASE_USERNAME}
+      DEFAULT_DOMAIN_TO_QUERY_FOR_EMAIL: {param:DEFAULT_DOMAIN_TO_QUERY_FOR_EMAIL}
+      DEFAULT_FROM_EMAIL: ${param:DEFAULT_FROM_EMAIL}
       REQUIRE_HTTPS: ${param:REQUIRE_HTTPS}
       S3_BUCKET: ${param:S3_BUCKET}
       SESSION_SECRET: ${param:SESSION_SECRET}

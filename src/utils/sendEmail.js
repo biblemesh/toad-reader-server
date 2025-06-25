@@ -2,8 +2,6 @@ const executeSendEmail = require('./executeSendEmail')
 const util = require('./util')
 const { i18n } = require("inline-i18n")
 
-const superAdminEmail = 'no-reply@toadreader.com'
-
 const sendEmail = input => {
 
   if(input instanceof Array) {
@@ -29,7 +27,7 @@ const sendEmail = input => {
     global.connection.query(
       `SELECT * FROM idp WHERE domain=:domain`,
       {
-        domain: req ? util.getIDPDomain(req.headers) : `books.toadreader.com`,
+        domain: req ? util.getIDPDomain(req.headers) : `${process.env.DEFAULT_DOMAIN_TO_QUERY_FOR_EMAIL}`,
       },
       (err, rows) => {
         if(err) {
@@ -74,7 +72,7 @@ const sendEmail = input => {
         )
 
       toAddrs = toAddrs instanceof Array ? toAddrs : [toAddrs]
-      fromAddr = fromEmail || superAdminEmail
+      fromAddr = fromEmail || `${process.env.DEFAULT_FROM_EMAIL}`
       replyToAddrs = replyToAddrs || fromAddr
       replyToAddrs = replyToAddrs instanceof Array ? replyToAddrs : [replyToAddrs]
 

@@ -367,7 +367,7 @@ readyPromises.push(
 
     if(!rows) {
       await sendEmail({
-        toAddrs: `support@toadreader.com`,
+        toAddrs: `${process.env.SUPPORT_EMAIL}`,
         subject: `SERVER ERROR: Could not run start-up query to create IDP endpoints`,
         body: `Fix this problem immediately as it means that tenants with Shibboleth cannot log in.`,
       })
@@ -557,7 +557,7 @@ const ensureAuthenticated = async (req, res, next) => {
 
         if(!idp) {
           log('Tenant not found: ' + req.headers.host, 2)
-          return res.redirect('https://' + process.env.APP_URL + '?tenant_not_found=1')
+          return res.redirect('https://' + process.env.MARKETING_URL + '?tenant_not_found=1')
 
         } else {
 
@@ -566,7 +566,7 @@ const ensureAuthenticated = async (req, res, next) => {
           const expiresAt = idp.demo_expires_at && util.mySQLDatetimeToTimestamp(idp.demo_expires_at)
           if(expiresAt && expiresAt < util.getUTCTimeStamp()) {
             log(['IDP no longer exists (#2)', idpId], 2)
-            return res.redirect('https://' + process.env.APP_URL + '?domain_expired=1')
+            return res.redirect('https://' + process.env.MARKETING_URL + '?domain_expired=1')
 
           } else {
 
