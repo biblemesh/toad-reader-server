@@ -26,7 +26,7 @@ module.exports = function (app, log) {
       const [ idp={} ] = await util.runQuery({
         query: `SELECT * FROM idp WHERE domain=:domain`,
         vars: {
-          domain: util.getIDPDomain(req.headers),
+          domain: util.getIDPDomain(req.hostname || req.headers.host),
         },
         next,
       })

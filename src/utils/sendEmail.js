@@ -27,7 +27,7 @@ const sendEmail = input => {
     global.connection.query(
       `SELECT * FROM idp WHERE domain=:domain`,
       {
-        domain: req ? util.getIDPDomain(req.headers) : `${process.env.DEFAULT_DOMAIN_TO_QUERY_FOR_EMAIL}`,
+        domain: req ? util.getIDPDomain(req.hostname || req.headers.host) : `${process.env.DEFAULT_DOMAIN_TO_QUERY_FOR_EMAIL}`,
       },
       (err, rows) => {
         if(err) {

@@ -310,17 +310,18 @@ const util = {
   // The next two functions are used for public canonical links. Eg. for share pages, xapi statements, and LTI launch links.
   // (getFrontendBaseUrl does not (and should not) get a beta base url.)
   // (For other things, use getDataOrigin and getFrontEndOrigin.)
-  getBackendBaseUrl: req => `${util.getProtocol({ req })}://${req.headers.host}`,
+  getBackendBaseUrl: req => `${util.getProtocol({ req })}://${req.hostname || req.headers.host}`,
   getFrontendBaseUrl: req => {
+    const host = req.hostname || req.headers.host
     // getFrontendBaseUrl used to return 'https://null' for dev
-    if (req.headers.host.includes('localhost')) {
+    if (host.includes('localhost')) {
       return util.getFrontEndOrigin({ req, env: 'dev' })
     }
 
-    if(req.headers.host.split('.')[1] === 'stg') {
+    if (host.split('.')[1] === 'stg') {
       return util.getFrontEndOrigin({ req, env: 'staging' })
     } else {
-      return `${util.getProtocol({ req })}://${util.getIDPDomain(req)}`
+      return `${util.getProtocol({ req })}://${util.getIDPDomain(host)}`
     }
   },
 
@@ -413,7 +414,7 @@ const util = {
   },
 
   getFrontEndOrigin: ({ req, env }) => {
-    let domain = util.getIDPDomain({ host: req.headers.host, env })
+    let domain = util.getIDPDomain({ host: req.hostname || req.headers.host, env })
 
     if(env ? env === 'dev' : process.env.IS_DEV) {
       domain = `${process.env.DEV_NETWORK_IP || `localhost`}:19006`
@@ -1366,13 +1367,13 @@ const util = {
     const [ idpRow ] = await util.runQuery({
       query: `SELECT id, ${jwtColInIdp} FROM idp WHERE domain=:domain`,
       vars: {
-        domain: util.getIDPDomain(req.headers),
+        domain: util.getIDPDomain(req.hostname || req.headers.host),
       },
       next,
     })
 
     if(!idpRow) {
-      log(["Invalid host.", req.headers.host], 3)
+      log(["Invalid host.", req.hostname || req.headers.host], 3)
       return res.status(403).send({ success: false })
     }
 
@@ -1380,7 +1381,7 @@ const util = {
       req.idpId = parseInt(idpRow.id, 10)
       req.payload_decoded = jwt.verify(req.params.payload || req.body.payload, idpRow[jwtColInIdp])
     } catch(err) {
-      log(["Invalid payload.", req.headers.host, req.params.payload || req.body.payload, req.body, jwtColInIdp, err], 3)
+      log(["Invalid payload.", req.hostname || req.headers.host, req.params.payload || req.body.payload, req.body, jwtColInIdp, err], 3)
       if(!ignoreError) {
         return res.status(403).send({ success: false })
       }
@@ -1399,12 +1400,12 @@ const util = {
 
     global.connection.query(
       'SELECT language FROM `idp` WHERE domain=?',
-      [util.getIDPDomain(req.headers)],
+      [util.getIDPDomain(req.hostname || req.headers.host)],
       (err, rows) => {
         if (err) return next(err)
   
         if(rows.length !== 1) {
-          log(["Request came from invalid host.", req.headers.host], 3)
+          log(["Request came from invalid host.", req.hostname || req.headers.host], 3)
           return res.status(403).send({ success: false })
         }
   
