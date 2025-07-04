@@ -483,12 +483,12 @@ const ensureAuthenticated = async (req, res, next) => {
   })
 
   if(req.headers['x-tenant-auth']) {
-    log(['x-tenant-auth header found', req.headers['x-tenant-auth'], util.getIDPDomain(req.headers)])
+    log(['x-tenant-auth header found', req.headers['x-tenant-auth'], util.getIDPDomain(req.hostname || req.headers.host)])
 
     const [ row={} ] = await util.runQuery({
       query: 'SELECT *, id AS idp_id FROM idp WHERE domain=:domain',
       vars: {
-        domain: util.getIDPDomain(req.headers),
+        domain: util.getIDPDomain(req.hostname || req.headers.host),
       },
       next,
     })
@@ -550,13 +550,13 @@ const ensureAuthenticated = async (req, res, next) => {
     
     log('Checking if IDP requires authentication')
     global.connection.query('SELECT * FROM `idp` WHERE domain=?',
-      [util.getIDPDomain(req.headers)],
+      [util.getIDPDomain(req.hostname || req.headers.host)],
       function (err, rows) {
         if (err) return next(err)
         const idp = rows[0]
 
         if(!idp) {
-          log('Tenant not found: ' + req.headers.host, 2)
+          log('Tenant not found: ' + req.hostname || req.headers.host, 2)
           return res.redirect('https://' + process.env.MARKETING_URL + '?tenant_not_found=1')
 
         } else {
