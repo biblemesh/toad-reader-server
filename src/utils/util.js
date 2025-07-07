@@ -383,6 +383,16 @@ const util = {
       return `${process.env.DEV_NETWORK_IP || `localhost`}:8080`
     }
 
+    // Check IPv4 address
+    if (domain.match(/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/)) {
+      return domain
+    }
+
+    // Check IPv6 address
+    if (domain.match(/^\[(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}\]$/)) {
+      return domain
+    }
+
     if(env ? env === 'staging' : (process.env.IS_STAGING === `true`)) {
       // staging environment
       return `data.stg.${domain}`
@@ -404,6 +414,30 @@ const util = {
   getIDPDomain: ({ host, env }) => {
     if(env ? env === 'dev' : process.env.IS_DEV) {
       return `${process.env.DEV_NETWORK_IP || `localhost`}:19006`
+    }
+
+    if (host === 'localhost' && process.env.DEFAULT_IDP_DOMAIN) {
+      return process.env.DEFAULT_IDP_DOMAIN
+    }
+
+    // Check IPv4 address
+    if (host.match(/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/)) {
+      // Check whether host is internal to the network, normally an internal health check
+      if (process.env.DEFAULT_IDP_DOMAIN && process.env.IPV4_INTERNAL_NETWORK_REGEX && (host.match(new RegExp(process.env.IPV4_INTERNAL_NETWORK_REGEX)) || host === '127.0.0.1')) {
+        return process.env.DEFAULT_IDP_DOMAIN
+      } else {
+        return host
+      }
+    }
+
+    // Check IPv6 address
+    if (host.match(/^\[(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}\]$/)) {
+      // Check whether host is internal to the network, normally an internal health check
+      if (process.env.DEFAULT_IDP_DOMAIN && process.env.IPV6_INTERNAL_NETWORK_REGEX && (host.match(new RegExp(process.env.IPV6_INTERNAL_NETWORK_REGEX)) || host === '::1')) {
+        return process.env.DEFAULT_IDP_DOMAIN
+      } else {
+        return host
+      }
     }
 
     if(env ? env === 'staging' : (process.env.IS_STAGING === `true`)) {
