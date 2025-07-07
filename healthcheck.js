@@ -7,7 +7,7 @@ http
     { host: `${process.env.DEFAULT_IDP_DOMAIN || 'localhost'}:${process.env.PORT || 8080}` },
     (res) => {
       console.log('statusCode', res.statusCode);
-      if (res.statusCode === 200) {
+      if ([200, 302, 304].includes(res.statusCode)) {
         process.exit(0);
       } else {
         process.exit(1);
