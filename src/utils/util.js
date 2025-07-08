@@ -393,12 +393,7 @@ const util = {
       return domain
     }
 
-    if(env ? env === 'staging' : (process.env.IS_STAGING === `true`)) {
-      // staging environment
-      return `data.stg.${domain}`
-    }
-
-    // production or beta environment
+    // beta, production or staging environment
     return `data.${domain}`
   },
 
@@ -440,10 +435,7 @@ const util = {
       }
     }
 
-    if(env ? env === 'staging' : (process.env.IS_STAGING === `true`)) {
-      return host.slice("data.stg.".length)
-    }
-
+    // beta, production or staging environment
     return host.slice("data.".length)
   },
 
@@ -454,9 +446,7 @@ const util = {
       domain = `${process.env.DEV_NETWORK_IP || `localhost`}:19006`
     }
 
-    if(env ? env === 'staging' : (process.env.IS_STAGING === `true`)) {
-      domain = `stg.${domain}`
-    }
+    // staging domain doesn't need to be manipulated
 
     const betaUrlMatch = (req.headers.referer || "").match(/^https?:\/\/(beta\.[^\/]*)(\/|$)/)
     if(env ? env === 'beta' : (betaUrlMatch || req.query.isBeta)) {
