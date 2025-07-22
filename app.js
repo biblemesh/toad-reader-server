@@ -568,7 +568,7 @@ const ensureAuthenticated = async (req, res, next) => {
           }
           
           // Production/staging: redirect to marketing URL
-          return res.redirect('https://' + process.env.MARKETING_URL + '?tenant_not_found=1')
+          return res.redirect('https://' + process.env.MARKETING_DOMAIN + '?tenant_not_found=1')
 
         } else {
 
@@ -577,7 +577,7 @@ const ensureAuthenticated = async (req, res, next) => {
           const expiresAt = idp.demo_expires_at && util.mySQLDatetimeToTimestamp(idp.demo_expires_at)
           if(expiresAt && expiresAt < util.getUTCTimeStamp()) {
             log(['IDP no longer exists (#2)', idpId], 2)
-            return res.redirect('https://' + process.env.MARKETING_URL + '?domain_expired=1')
+            return res.redirect('https://' + process.env.MARKETING_DOMAIN + '?domain_expired=1')
 
           } else {
 
