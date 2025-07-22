@@ -76,7 +76,7 @@ LABEL org.opencontainers.image.authors=${AUTHOR} \
   org.opencontainers.image.version=${EREADER_VERSION}
 
 COPY --from=build /app/node_modules ./node_modules/
-COPY app.js crons.js healthcheck.js package.json package-lock.json ./
+COPY app.js crons.js healthcheck.js index.html package.json package-lock.json ./
 COPY crons ./crons/
 COPY scripts ./scripts/
 COPY src ./src/
