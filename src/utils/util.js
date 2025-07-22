@@ -397,6 +397,7 @@ const util = {
     return `data.${domain}`
   },
 
+  // TODO remove old
   // old param is temporary
   getDataOrigin: ({ domain, protocol=`https`, env, old }={}) => (
     `${
