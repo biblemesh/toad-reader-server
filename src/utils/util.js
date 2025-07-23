@@ -410,7 +410,7 @@ const util = {
   getIDPDomain: ({ host, env }) => {
     // Handle undefined host and quotes domain, where both won't match idp table entries
     if (!host || host === process.env.QUOTES_DOMAIN) {
-      return host
+      return host || ""
     }
 
     if(env ? env === 'dev' : process.env.IS_DEV) {
