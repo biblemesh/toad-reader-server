@@ -10,6 +10,7 @@ const session = require('express-session')
 const MySQLStore = require('express-mysql-session')(session)
 const mysql = require('mysql')
 const SqlString = require('mysql/lib/protocol/SqlString')
+const { log } = require('./logger')
 
 const getShopifyUserInfo = require('./getShopifyUserInfo')
 
@@ -134,7 +135,7 @@ const jsonCols = {
 
 const openConnection = () => {
 
-  console.log(`Establish connection pool`)
+  log([`Establish connection pool`])
 
   global.connection = mysql.createPool({
     host: process.env.OVERRIDE_DATABASE_HOSTNAME || process.env.DATABASE_HOSTNAME,
@@ -169,7 +170,7 @@ const openConnection = () => {
   // should only actually fire if the lambda instance persists over an hour.)
   // See https://stackoverflow.com/questions/70645884/error-packets-out-of-order-got-0-expected-3
   setTimeout(() => {
-    console.log(`Close connection pool`)
+    log([`Close connection pool`])
     global.connection.end()
     delete global.connection
   }, 1000 * 60 * 60)
@@ -1388,7 +1389,7 @@ const util = {
         }
       )
 
-      // console.log('runQuery SQL: ', sql)
+      // log(['runQuery SQL: ', sql])
     })
   ),
 

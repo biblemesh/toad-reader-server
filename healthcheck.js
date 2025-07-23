@@ -2,11 +2,13 @@
 
 const http = require('http');
 
+const { log } = require('./src/utils/logger')
+
 http
   .get(`http://localhost:${process.env.PORT || 8080}/Shibboleth.sso/Metadata`,
     { host: `${process.env.DEFAULT_IDP_DOMAIN || 'localhost'}:${process.env.PORT || 8080}` },
     (res) => {
-      console.log('statusCode', res.statusCode);
+      log(['statusCode', res.statusCode]);
       if ([200, 302, 304].includes(res.statusCode)) {
         process.exit(0);
       } else {
@@ -14,6 +16,6 @@ http
       }
     })
   .on('error', (err) => {
-    console.log('error', err);
+    log(err, 3);
     process.exit(1);
   });
