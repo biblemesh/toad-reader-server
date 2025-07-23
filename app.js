@@ -483,12 +483,13 @@ const ensureAuthenticated = async (req, res, next) => {
   })
 
   if(req.headers['x-tenant-auth']) {
-    log(['x-tenant-auth header found', req.headers['x-tenant-auth'], util.getIDPDomain(req.hostname || req.headers.host)])
+    const idpDomain = util.getIDPDomain({ host: req.hostname || req.headers.host })
+    log(['x-tenant-auth header found', req.headers['x-tenant-auth'], idpDomain])
 
     const [ row={} ] = await util.runQuery({
       query: 'SELECT *, id AS idp_id FROM idp WHERE domain=:domain',
       vars: {
-        domain: util.getIDPDomain(req.hostname || req.headers.host),
+        domain: idpDomain,
       },
       next,
     })
@@ -550,7 +551,7 @@ const ensureAuthenticated = async (req, res, next) => {
     
     log('Checking if IDP requires authentication')
     global.connection.query('SELECT * FROM `idp` WHERE domain=?',
-      [util.getIDPDomain(req.hostname || req.headers.host)],
+      [util.getIDPDomain({ host: req.hostname || req.headers.host })],
       function (err, rows) {
         if (err) return next(err)
         const idp = rows[0]
@@ -561,8 +562,8 @@ const ensureAuthenticated = async (req, res, next) => {
           // Debug mode: return detailed JSON response for debugging
           if(process.env.DEBUG === 'true') {
             return res.status(404).json({
-              error: `Tenant not found: ${req.headers.host}`,
-              expectedIdpDomain: util.getIDPDomain(req.headers),
+              error: `Tenant not found: ${req.hostname || req.headers.host}`,
+              expectedIdpDomain: util.getIDPDomain({ host: req.hostname || req.headers.host }),
               failedQuery: "SELECT * FROM `idp` WHERE domain=?"
             })
           }

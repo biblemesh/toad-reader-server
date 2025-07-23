@@ -227,7 +227,7 @@ module.exports = function (
     } else {
       global.connection.query(
         'SELECT id FROM `idp` WHERE domain=?',
-        [util.getIDPDomain(req.headers)],
+        [util.getIDPDomain({ host: req.hostname || req.headers.host })],
         function (err, rows) {
           if (err) return next(err);
 
