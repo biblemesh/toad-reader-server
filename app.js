@@ -25,7 +25,7 @@ const port = parseInt(process.env.PORT, 10) || process.env.PORT || 8080
 app.set('port', port)
 const server = http.createServer(app)
 const log = function(msgs, importanceLevel) {
-  const logLevel = parseInt(process.env.LOGLEVEL) || 3   // 1=verbose, 2=important, 3=errors only
+  const logLevel = parseInt(process.env.LOG_LEVEL) || 3   // 1=verbose, 2=important, 3=errors only
   importanceLevel = importanceLevel || 1
   if(importanceLevel >= logLevel) {
     if(!Array.isArray(msgs)) msgs = [msgs]
