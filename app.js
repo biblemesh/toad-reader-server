@@ -18,21 +18,13 @@ const { i18nSetup } = require("inline-i18n")
 const fs = require('fs')
 const sendEmail = require('./src/utils/sendEmail')
 require("array-flat-polyfill")  // Array.flat function
+const { log } = require('./src/utils/logger.js');
 
 ////////////// SETUP SERVER //////////////
 
 const port = parseInt(process.env.PORT, 10) || process.env.PORT || 8080
 app.set('port', port)
 const server = http.createServer(app)
-const log = function(msgs, importanceLevel) {
-  const logLevel = parseInt(process.env.LOG_LEVEL) || 3   // 1=verbose, 2=important, 3=errors only
-  importanceLevel = importanceLevel || 1
-  if(importanceLevel >= logLevel) {
-    if(!Array.isArray(msgs)) msgs = [msgs]
-    msgs.unshift(['LOG ','INFO','ERR '][importanceLevel - 1])
-    console.log.apply(this, msgs)
-  }
-}
 
 const sessionParser = util.session({
   store: util.sessionStore,
@@ -47,7 +39,7 @@ const sessionParser = util.session({
     // if they use this session at least once/3 months, it will never expire
   },
 })
-// console.log('ENV >>> ', process.env)
+// log(['ENV >>> ', process.env])
 
 
 ////////////// WAIT FOR INITIAL SETUP //////////////
@@ -228,7 +220,7 @@ passport.deserializeUser((partialUser, done) => {
 })
 
 // app.use((req, res, next) => {
-//   console.log('req >>>>>', req.originalUrl, req.path, req.headers, req.query, req.body)
+//   log(['req >>>>>', req.originalUrl, req.path, req.headers, req.query, req.body])
 //   next()
 // })
 
@@ -729,7 +721,7 @@ server.listen(port)
 if(!!process.env.IS_DEV) {
   app.listen(port, (err) => {
     if (err) throw err
-    console.log('> Ready on http://localhost:8081')
+    log('> Ready on http://localhost:8081')
   })
 }
 
