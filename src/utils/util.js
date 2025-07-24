@@ -554,7 +554,7 @@ const util = {
     const connectorCharacter = /\?/.test(idp.userInfoEndpoint) ? `&` : `?`
     let response, jwtStr
     const url = `${idp.userInfoEndpoint}${connectorCharacter}version=${API_VERSION}&payload=${payload}`
-    log([`URL being sent to userInfoEndpoint...`, url], 3)
+    log([`URL being sent to userInfoEndpoint...`, url], 1)
 
     try {
 
