@@ -721,7 +721,7 @@ server.listen(port)
 if(!!process.env.IS_DEV) {
   app.listen(port, (err) => {
     if (err) throw err
-    log('> Ready on http://localhost:8081')
+    log(['> Ready on http://localhost:8081'])
   })
 }
 
