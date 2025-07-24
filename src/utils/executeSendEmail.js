@@ -42,13 +42,13 @@ const executeSendEmail = ({ queuedEmail, resolve, reject }) => {
 
       if(err) {
         log(['Email error: ', err, JSON.stringify(queuedEmail)], 3)
-        reject(error.message || 'email send failed')
+        reject(err.message || 'email send failed')
       }
 
       resolve && resolve(true)
 
     } catch(err) {
-      reject(error.message || 'email send failed')
+      reject(err.message || 'email send failed')
     }
 
   })
