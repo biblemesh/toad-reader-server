@@ -1,3 +1,5 @@
+/* global requireRouter */
+
 module.exports = function (
   app,
   s3,
@@ -7,6 +9,11 @@ module.exports = function (
   logIn,
   log,
 ) {
+  if (typeof requireRouter === 'undefined') {
+    // for testing; it is difficult to mock the require function in this setup
+    global.requireRouter = require;
+  }
+
   var path = require('path');
   var fs = require('fs');
   var mime = require('mime');
@@ -49,7 +56,7 @@ module.exports = function (
     return ensureAuthenticated(req, res, next);
   }
 
-  require('./auth_routes')(
+  requireRouter('./auth_routes')(
     app,
     passport,
     authFuncs,
@@ -57,25 +64,29 @@ module.exports = function (
     logIn,
     log,
   );
-  require('./api_routes')(app, log);
-  require('./admin_routes')(app, s3, ensureAuthenticatedAndCheckIDP, log);
-  require('./user_routes')(
+  requireRouter('./api_routes')(app, log);
+  requireRouter('./admin_routes')(app, s3, ensureAuthenticatedAndCheckIDP, log);
+  requireRouter('./user_routes')(
     app,
     ensureAuthenticatedAndCheckIDP,
     ensureAuthenticatedAndCheckIDPWithRedirect,
     log,
   );
-  require('./search_routes')(app, ensureAuthenticatedAndCheckIDP, log);
-  require('./lti_routes')(app, ensureAuthenticatedAndCheckIDP, log);
-  require('./dashboard_routes')(app, ensureAuthenticatedAndCheckIDP, log);
-  require('./patch_route')(app, ensureAuthenticatedAndCheckIDP, log);
-  require('./connect_to_classroom_routes')(
+  requireRouter('./search_routes')(app, ensureAuthenticatedAndCheckIDP, log);
+  requireRouter('./lti_routes')(app, ensureAuthenticatedAndCheckIDP, log);
+  requireRouter('./dashboard_routes')(app, ensureAuthenticatedAndCheckIDP, log);
+  requireRouter('./patch_route')(app, ensureAuthenticatedAndCheckIDP, log);
+  requireRouter('./connect_to_classroom_routes')(
     app,
     ensureAuthenticatedAndCheckIDP,
     log,
   );
-  require('./xapi_routes')(app, ensureAuthenticatedAndCheckIDP, log);
-  require('./discussion_routes')(app, ensureAuthenticatedAndCheckIDP, log);
+  requireRouter('./xapi_routes')(app, ensureAuthenticatedAndCheckIDP, log);
+  requireRouter('./discussion_routes')(
+    app,
+    ensureAuthenticatedAndCheckIDP,
+    log,
+  );
 
   var getAssetFromS3 = function (
     req,
