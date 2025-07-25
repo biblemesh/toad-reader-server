@@ -5,6 +5,7 @@ import * as request from 'supertest';
 import * as util from '../utils/util';
 import * as setupRoutes from './routes';
 
+// Prevent further routers from being loaded
 global.requireRouter = jest.fn().mockReturnValue(jest.fn());
 
 jest.mock('express-mysql-session', () => () => jest.fn());
