@@ -557,6 +557,17 @@ const ensureAuthenticated = async (req, res, next) => {
 
         if(!idp) {
           log('Tenant not found: ' + req.headers.host, 2)
+          
+          // Debug mode: return detailed JSON response for debugging
+          if(process.env.DEBUG === 'true') {
+            return res.status(404).json({
+              error: `Tenant not found: ${req.headers.host}`,
+              expectedIdpDomain: util.getIDPDomain(req.headers),
+              failedQuery: "SELECT * FROM `idp` WHERE domain=?"
+            })
+          }
+          
+          // Production/staging: redirect to marketing URL
           return res.redirect('https://' + process.env.MARKETING_URL + '?tenant_not_found=1')
 
         } else {
