@@ -1,9 +1,10 @@
 const parseEpub = require('./parseEpub')
 const { getIndexedBook } = require('./indexEpub')
+const { log } = require('./logger')
 const { runQuery, getFromS3, convertJsonColsToStrings } = require('./util')
 const mime = require('mime')
 
-module.exports = async ({ s3, next, log }) => {
+module.exports = async ({ s3, next }) => {
 
   return
 
@@ -47,7 +48,7 @@ module.exports = async ({ s3, next, log }) => {
 
     log([`SearchIndexing: Parsing book id ${bookId}...`])
 
-    const { spines, success } = await parseEpub({ baseUri, log })
+    const { spines, success } = await parseEpub({ baseUri })
 
     if(!success) {
       log([`SearchIndexing: Could not parse epub for book id ${bookId}.`], 3)
@@ -81,7 +82,7 @@ module.exports = async ({ s3, next, log }) => {
 
     // create index for search
     try {
-      const indexedBook = await getIndexedBook({ baseUri, spines, log })
+      const indexedBook = await getIndexedBook({ baseUri, spines })
       await putEPUBFile('search_index.json', indexedBook.jsonStr)
 
       const indexObj = indexedBook.indexObj

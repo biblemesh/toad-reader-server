@@ -1,6 +1,7 @@
+const { log } = require('../utils/logger')
 const util = require('../utils/util');
 
-module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
+module.exports = function (app, ensureAuthenticatedAndCheckIDP) {
 
   app.post('/connect_to_classroom', ensureAuthenticatedAndCheckIDP, function (req, res, next) {
 

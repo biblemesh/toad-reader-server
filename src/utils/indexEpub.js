@@ -1,9 +1,10 @@
 const MiniSearch = require("minisearch")
 
+const { log } = require('./logger')
 const { SPACE_OR_PUNCTUATION } = require("./util")
 const getEpubTextNodeDocuments = require("./getEpubTextNodeDocuments")
 
-const getIndexedBook = async ({ baseUri, spines, log }) => {
+const getIndexedBook = async ({ baseUri, spines }) => {
 
   const currentMiniSearch = new MiniSearch({
     idField: 'id',
@@ -42,7 +43,7 @@ const getIndexedBook = async ({ baseUri, spines, log }) => {
     }
 
     try {
-      const { updatedDocumentIndex, documents } = await getEpubTextNodeDocuments({ spineItemPath, spineIdRef: spine.idref, documentIndex, searchTermCounts, log })
+      const { updatedDocumentIndex, documents } = await getEpubTextNodeDocuments({ spineItemPath, spineIdRef: spine.idref, documentIndex, searchTermCounts })
       documentIndex = updatedDocumentIndex
       await currentMiniSearch.addAllAsync(documents)
 

@@ -1,9 +1,10 @@
+const { log } = require('../utils/logger')
 const WebSocket = require('ws')
 const url = require('url')
 const uuidv4 = require('uuid/v4')
 const util = require('../utils/util');
 
-module.exports = ({ server, sessionParser, log }) => {
+module.exports = ({ server, sessionParser }) => {
 
   const wss = {
     discussion: new WebSocket.Server({

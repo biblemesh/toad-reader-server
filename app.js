@@ -293,7 +293,7 @@ const strategyCallback = function(req, idp, profile, done) {
       idpUserId,
     }
 
-    util.getUserInfo({ idp, idpUserId, next: done, req, log, userInfo }).then(returnUser)
+    util.getUserInfo({ idp, idpUserId, next: done, req, userInfo }).then(returnUser)
 
   } else {  // old method: get userInfo from meta data
 
@@ -319,7 +319,7 @@ const strategyCallback = function(req, idp, profile, done) {
       done('Bad login.')
     }
   
-    util.updateUserInfo({ log, userInfo, idpId, updateLastLoginAt: true, next: done, req }).then(returnUser)
+    util.updateUserInfo({ userInfo, idpId, updateLastLoginAt: true, next: done, req }).then(returnUser)
   }
 }
 
@@ -333,7 +333,7 @@ const strategyCallback = function(req, idp, profile, done) {
 //     }
 
 //     for(let row of rows) {
-//       await util.updateComputedBookAccess({ idpId: row.id, log })
+//       await util.updateComputedBookAccess({ idpId: row.id })
 //     }
 //   }
 // )
@@ -592,12 +592,11 @@ const ensureAuthenticated = async (req, res, next) => {
 
                   if(idp.userInfoEndpoint) {
 
-                    util.getUserInfo({ idp, idpUserId: token.id, req, res, next, log }).then(logInSessionSharingUser)
+                    util.getUserInfo({ idp, idpUserId: token.id, req, res, next }).then(logInSessionSharingUser)
 
                   } else {  // old method: get userInfo from meta data
 
                     util.updateUserInfo({
-                      log,
                       userInfo: Object.assign(
                         {},
                         token,
@@ -685,7 +684,7 @@ app.use(passport.session())
 
 ////////////// ROUTES //////////////
 
-// require('./src/sockets/sockets')({ server, sessionParser, log })
+// require('./src/sockets/sockets')({ server, sessionParser })
 
 // force HTTPS
 app.use('*', function(req, res, next) {  
@@ -700,7 +699,7 @@ app.use('*', function(req, res, next) {
   }
 })
 
-require('./src/routes/routes')(app, s3, passport, authFuncs, ensureAuthenticated, logIn, log)
+require('./src/routes/routes')(app, s3, passport, authFuncs, ensureAuthenticated, logIn)
 
 Sentry.setupExpressErrorHandler(app);
 

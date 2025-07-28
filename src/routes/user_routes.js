@@ -5,6 +5,7 @@ const AWS = require('aws-sdk')
 const crypto = require('crypto')
 const fetch = require('node-fetch')
 const jwt = require('jsonwebtoken')
+const { log } = require('../utils/logger')
 
 const util = require('../utils/util')
 const sendEmail = require("../utils/sendEmail")
@@ -28,7 +29,7 @@ const getSignedUrlAsync = params => new Promise((resolve, reject) => {
   })
 })
 
-module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthenticatedAndCheckIDPWithRedirect, log) {
+module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthenticatedAndCheckIDPWithRedirect) {
 
   const encodeURIComp = function(comp) {
     return encodeURIComponent(comp).replace(/%20/g, "+")
@@ -237,7 +238,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
 
     // TODO: Eventually, this listener should include an updates_since date so as to not fetch everything.
 
-    util.hasAccess({ bookId: req.params.bookId, req, log, next }).then(accessInfo => {
+    util.hasAccess({ bookId: req.params.bookId, req, next }).then(accessInfo => {
 
       if(!accessInfo) {
         log(['Forbidden: user does not have access to this book'], 3);
@@ -613,7 +614,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
       const { bookId } = req.params
 
       // See if they have access to this book
-      const accessInfo = await util.hasAccess({ bookId, req, log, next })
+      const accessInfo = await util.hasAccess({ bookId, req, next })
 
       if(!accessInfo) {
         log(['Forbidden: user does not have access to this book and so a cookie was not created'], 3)
@@ -713,7 +714,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
   app.get(
     '/epub_content/epub_library.json',
     ensureAuthenticatedAndCheckIDP,
-    (req, res, next) => util.getLibrary({ req, res, next, log }),
+    (req, res, next) => util.getLibrary({ req, res, next }),
   )
 
   app.post(
@@ -748,7 +749,6 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
           idpUserId: req.user.userIdFromIdp,
           next,
           req,
-          log,
         })
       } catch(err) {
         const apiErrorPrefix = /^API:/
@@ -762,7 +762,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
         return
       }
 
-      return util.getLibrary({ req, res, next, log })
+      return util.getLibrary({ req, res, next })
     },
   )
  

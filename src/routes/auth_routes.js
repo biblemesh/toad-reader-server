@@ -1,3 +1,4 @@
+const { log } = require('../utils/logger')
 const util = require('../utils/util')
 const { i18n } = require("inline-i18n")
 const sendEmail = require("../utils/sendEmail")
@@ -30,7 +31,7 @@ const clearFromDeviceLoginLimitList = async ({ req, userId }) => {
 
   }
 }
-module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn, log) {
+module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn) {
 
   app.get('/setcookie',
     (req, res) => {
@@ -542,12 +543,11 @@ module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn,
                 next,
               })
 
-              loginInfo = await util.getUserInfo({ idp, idpUserId, next, req, res, log })
+              loginInfo = await util.getUserInfo({ idp, idpUserId, next, req, res })
               
             } else {
               // create the user if they do not exist
               loginInfo = await util.updateUserInfo({
-                log,
                 userInfo: {
                   idpUserId: email,
                   email,

@@ -1,4 +1,6 @@
-module.exports = function (app, s3, passport, authFuncs, ensureAuthenticated, logIn, log) {
+const { log } = require('../utils/logger')
+
+module.exports = function (app, s3, passport, authFuncs, ensureAuthenticated, logIn) {
 
   var path = require('path');
   var fs = require('fs');
@@ -42,17 +44,17 @@ module.exports = function (app, s3, passport, authFuncs, ensureAuthenticated, lo
     return ensureAuthenticated(req, res, next);
   }
 
-  require('./auth_routes')(app, passport, authFuncs, ensureAuthenticated, logIn, log);
-  require('./api_routes')(app, log);
-  require('./admin_routes')(app, s3, ensureAuthenticatedAndCheckIDP, log);
-  require('./user_routes')(app, ensureAuthenticatedAndCheckIDP, ensureAuthenticatedAndCheckIDPWithRedirect, log);
-  require('./search_routes')(app, ensureAuthenticatedAndCheckIDP, log);
-  require('./lti_routes')(app, ensureAuthenticatedAndCheckIDP, log);
-  require('./dashboard_routes')(app, ensureAuthenticatedAndCheckIDP, log);
-  require('./patch_route')(app, ensureAuthenticatedAndCheckIDP, log);
-  require('./connect_to_classroom_routes')(app, ensureAuthenticatedAndCheckIDP, log);
-  require('./xapi_routes')(app, ensureAuthenticatedAndCheckIDP, log);
-  require('./discussion_routes')(app, ensureAuthenticatedAndCheckIDP, log);
+  require('./auth_routes')(app, passport, authFuncs, ensureAuthenticated, logIn);
+  require('./api_routes')(app);
+  require('./admin_routes')(app, s3, ensureAuthenticatedAndCheckIDP);
+  require('./user_routes')(app, ensureAuthenticatedAndCheckIDP, ensureAuthenticatedAndCheckIDPWithRedirect);
+  require('./search_routes')(app, ensureAuthenticatedAndCheckIDP);
+  require('./lti_routes')(app, ensureAuthenticatedAndCheckIDP);
+  require('./dashboard_routes')(app, ensureAuthenticatedAndCheckIDP);
+  require('./patch_route')(app, ensureAuthenticatedAndCheckIDP);
+  require('./connect_to_classroom_routes')(app, ensureAuthenticatedAndCheckIDP);
+  require('./xapi_routes')(app, ensureAuthenticatedAndCheckIDP);
+  require('./discussion_routes')(app, ensureAuthenticatedAndCheckIDP);
 
   var getAssetFromS3 = function(req, res, next, notFoundCallback, tryWithoutDecode) {
     var urlWithoutQuery = req.originalUrl.replace(/(\?.*)?$/, '').replace(/^\/book/,'').replace(/%20/g, ' ');
@@ -67,7 +69,7 @@ module.exports = function (app, s3, passport, authFuncs, ensureAuthenticated, lo
     // params.Expires = 60
     // var url = s3.getSignedUrl('getObject', params, function(err, url) {
     //   if(err) {
-    //     console.log('S3 getSignedUrl error on ' + params.Key, err);
+    //     log('S3 getSignedUrl error on ' + params.Key, err);
     //     res.status(404).send({ error: 'Not found' });
     //   } else {
     //     res.redirect(307, url);
@@ -220,7 +222,7 @@ module.exports = function (app, s3, passport, authFuncs, ensureAuthenticated, lo
     // check that they have access if this is a book
     if(urlPieces[1] == 'epub_content') {
 
-      const accessInfo = await util.hasAccess({ bookId, req, log, next })
+      const accessInfo = await util.hasAccess({ bookId, req, next })
 
       if(!accessInfo) {
         log(['They do not have access to this book', bookId], 2)

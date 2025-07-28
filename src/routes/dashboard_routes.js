@@ -1,6 +1,6 @@
 const util = require('../utils/util')
 
-module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
+module.exports = function (app, ensureAuthenticatedAndCheckIDP) {
 
   // get scores
   app.get('/getscores/:classroomUid',

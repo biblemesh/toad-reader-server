@@ -1,9 +1,10 @@
+const { log } = require('../utils/logger')
 const util = require('../utils/util')
 const patchLatestLocation = require('./patch_keys/patch_latest_location')
 const patchHighlights = require('./patch_keys/patch_highlights')
 const patchClassrooms = require('./patch_keys/patch_classrooms')
 
-module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
+module.exports = function (app, ensureAuthenticatedAndCheckIDP) {
 
   // books.toadreader.com/users/{user_id}/books/{book_id}.json
   app.all('/users/:userId/books/:bookId.json', ensureAuthenticatedAndCheckIDP, function (req, res, next) {
@@ -111,7 +112,6 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
                     //   await util.dieOnNoClassroomEditPermission({
                     //     next,
                     //     req,
-                    //     log,
                     //     classroomUid: based_off_classroom_uid,
                     //   })
                     // }

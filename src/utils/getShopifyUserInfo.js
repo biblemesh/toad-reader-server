@@ -3,10 +3,11 @@ const { shopifyApi } = require('@shopify/shopify-api')
 // const { shopifyApi, LATEST_API_VERSION, Session } = require('@shopify/shopify-api')
 const { restResources } = require("@shopify/shopify-api/rest/admin/2023-01")
 const fetch = require('node-fetch')
+const { log } = require('./logger')
 
 let currentNumberOfWaitingShopifyRequests = 0
 
-const getShopifyUserInfo = async ({ email, idp, log, waitToExecuteIfNecessary }) => {
+const getShopifyUserInfo = async ({ email, idp, waitToExecuteIfNecessary }) => {
 
   try {
 

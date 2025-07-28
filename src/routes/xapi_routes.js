@@ -1,8 +1,9 @@
+const { log } = require('../utils/logger')
 const util = require('../utils/util');
 
 var threadIdx = 0;
 
-module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
+module.exports = function (app, ensureAuthenticatedAndCheckIDP) {
 
   // books.toadreader.com/reportReading
   app.post('/reportReading', ensureAuthenticatedAndCheckIDP, function (req, res, next) {

@@ -476,7 +476,6 @@ const util = {
     next,
     req,
     res,
-    log,
     userInfo={},
   }) => {
 
@@ -525,7 +524,7 @@ const util = {
         // next('Bad login.')
       }
 
-      return await util.updateUserInfo({ log, userInfo, idpId: idp.id, updateLastLoginAt: true, next, req })
+      return await util.updateUserInfo({ userInfo, idpId: idp.id, updateLastLoginAt: true, next, req })
     }
 
     if(/^shopify:/.test(idp.userInfoEndpoint)) {
@@ -537,7 +536,6 @@ const util = {
           ...(await getShopifyUserInfo({
             email: idpUserId,
             idp,
-            log,
             waitToExecuteIfNecessary: true,
           })),
         }
@@ -547,7 +545,7 @@ const util = {
         // next('Bad login.')
       }
 
-      return await util.updateUserInfo({ log, userInfo, idpId: idp.id, updateLastLoginAt: true, next, req })
+      return await util.updateUserInfo({ userInfo, idpId: idp.id, updateLastLoginAt: true, next, req })
     }
 
     const payload = jwt.sign({ idpUserId }, idp.userInfoJWT)
@@ -586,7 +584,7 @@ const util = {
           books: [],
           ...userInfo,
         }
-        return await util.updateUserInfo({ log, userInfo, idpId: idp.id, updateLastLoginAt: true, next, req })
+        return await util.updateUserInfo({ userInfo, idpId: idp.id, updateLastLoginAt: true, next, req })
       } else if(response.status !== 200) {
         log([`Invalid response from userInfoEndpoint`, url], 3)
         // next('Bad login.')
@@ -608,7 +606,7 @@ const util = {
       // next('Bad login.')
     }
 
-    return await util.updateUserInfo({ log, userInfo, idpId: idp.id, updateLastLoginAt: true, next, req })
+    return await util.updateUserInfo({ userInfo, idpId: idp.id, updateLastLoginAt: true, next, req })
 
   },
 
@@ -618,7 +616,6 @@ const util = {
     idpUserId,
     next,
     req,
-    log,
   }) => {
 
     let response, jwtStr, userInfo
@@ -665,11 +662,11 @@ const util = {
       throw err
     }
 
-    await util.updateUserInfo({ log, userInfo, idpId: idp.id, next, req })
+    await util.updateUserInfo({ userInfo, idpId: idp.id, next, req })
 
   },
 
-  updateUserInfo: async ({ log, userInfo, idpId, updateLastLoginAt=false, req, next }) => {
+  updateUserInfo: async ({ userInfo, idpId, updateLastLoginAt=false, req, next }) => {
 
     // Payload:
     // {
@@ -969,7 +966,7 @@ const util = {
     }
 
     // update computed books
-    await util.updateComputedBookAccess({ idpId, userId, log })
+    await util.updateComputedBookAccess({ idpId, userId })
 
     return {
       userId,
@@ -977,7 +974,7 @@ const util = {
     }
   },
 
-  hasAccess: ({ bookId, requireEnhancedToolsAccess=false, req, log, next }) => new Promise(resolveAll => {
+  hasAccess: ({ bookId, requireEnhancedToolsAccess=false, req, next }) => new Promise(resolveAll => {
 
     if(!req.isAuthenticated()) {
       resolveAll(false);
@@ -1075,7 +1072,7 @@ const util = {
 
   },
 
-  updateComputedBookAccess: ({ idpId, userId, bookId, log }) => new Promise(resolve => {
+  updateComputedBookAccess: ({ idpId, userId, bookId }) => new Promise(resolve => {
 
     // idpId is required
     if(!idpId) {
@@ -1393,7 +1390,7 @@ const util = {
     })
   ),
 
-  decodeJWT: ({ jwtColInIdp='internalJWT', log, ignoreError }) => async (req, res, next) => {
+  decodeJWT: ({ jwtColInIdp='internalJWT', ignoreError }) => async (req, res, next) => {
 
     const [ idpRow ] = await util.runQuery({
       query: `SELECT id, ${jwtColInIdp} FROM idp WHERE domain=:domain`,
@@ -1533,7 +1530,7 @@ const util = {
     return true
   },
 
-  dieOnNoClassroomEditPermission: async ({ next, req, log, classroomUid }) => {
+  dieOnNoClassroomEditPermission: async ({ next, req, classroomUid }) => {
     const isDefaultClassroomUid = /^[0-9]+-[0-9]+$/.test(classroomUid)
     const now = util.timestampToMySQLDatetime()
 
@@ -1653,7 +1650,7 @@ const util = {
     })
   }),
 
-  getLibrary: async ({ req, res, next, log, newBookId }) => {
+  getLibrary: async ({ req, res, next, newBookId }) => {
 
     const now = util.timestampToMySQLDatetime();
 

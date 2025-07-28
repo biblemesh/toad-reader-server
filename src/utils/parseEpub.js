@@ -3,6 +3,7 @@
 const fs = require('fs')
 const { parseString } = require('xml2js')
 
+const { log } = require('./logger')
 const { getFromS3 } = require("./util")
 
 const normalizePath = path => {
@@ -45,7 +46,7 @@ const getXmlAsObj = async ({ uri }) => {
   )
 }
 
-module.exports = async ({ baseUri, log }) => {
+module.exports = async ({ baseUri }) => {
 
   const info = { success: true }
 

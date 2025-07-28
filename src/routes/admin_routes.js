@@ -3,6 +3,7 @@ const multiparty = require('multiparty')
 const admzip = require('adm-zip')
 const Jimp = require("jimp")
 const fetch = require('node-fetch')
+const { log } = require('../utils/logger')
 const mime = require('mime')
 const uuidv4 = require('uuid/v4')
 const mm = require('music-metadata')
@@ -27,7 +28,7 @@ if(baseTmpDir) {
   baseTmpDir = `${baseTmpDir}/`
 }
 
-module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
+module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP) {
 
   const deleteFolderRecursive = path => {
     log(['Delete folder', path], 2)
@@ -170,7 +171,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
 
     log('Delete (idp disassociation) successful', 2)
 
-    await util.updateComputedBookAccess({ idpId: req.user.idpId, bookId: req.params.bookId, log })
+    await util.updateComputedBookAccess({ idpId: req.user.idpId, bookId: req.params.bookId })
 
     res.send({ success: true });
           
@@ -294,7 +295,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
         // TODO: make fonts public
 
         // after files uploaded
-        const { title, author, isbn, coverHref, spines, success } = await parseEpub({ baseUri: toUploadDir, log })
+        const { title, author, isbn, coverHref, spines, success } = await parseEpub({ baseUri: toUploadDir })
 
         if(!success) {
           throw Error(`unable_to_process`)
@@ -309,7 +310,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
         // create and save search index
         let indexObj, searchTermCounts, noOfflineSearch
         try {
-          const indexedBook = await getIndexedBook({ baseUri: toUploadDir, spines, log })
+          const indexedBook = await getIndexedBook({ baseUri: toUploadDir, spines })
           if(!indexedBook.noOfflineSearch) {
             await putEPUBFile('search_index.json', indexedBook.jsonStr)
           }
@@ -403,7 +404,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
               next,
             })
 
-            await util.updateComputedBookAccess({ idpId: req.user.idpId, bookId: rows[0].id, log })
+            await util.updateComputedBookAccess({ idpId: req.user.idpId, bookId: rows[0].id })
 
             log('Import unnecessary (book exists in idp with same group; added association)', 2)
             res.send({
@@ -539,7 +540,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
           next,
         })
 
-        await util.updateComputedBookAccess({ idpId: req.user.idpId, bookId: bookRow.id, log })
+        await util.updateComputedBookAccess({ idpId: req.user.idpId, bookId: bookRow.id })
 
         log('Import successful', 2)
         try {  // If everything was successful, but the connection timed out, don't delete it.
@@ -577,7 +578,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
 
           if(bookRow) {
             await deleteBookIfUnassociated(bookRow.id, next)
-            await util.updateComputedBookAccess({ idpId: req.user.idpId, bookId: bookRow.id, log })
+            await util.updateComputedBookAccess({ idpId: req.user.idpId, bookId: bookRow.id })
           }
 
           deleteFolderRecursive(tmpDir)
@@ -621,7 +622,6 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
       await util.dieOnNoClassroomEditPermission({
         next,
         req,
-        log,
         classroomUid,
       })
 
@@ -865,7 +865,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
         next,
       })
 
-      await util.updateComputedBookAccess({ idpId: req.user.idpId, bookId: bookRow.id, log })
+      await util.updateComputedBookAccess({ idpId: req.user.idpId, bookId: bookRow.id })
 
     }
 
@@ -879,7 +879,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
       next,
     })
 
-    return util.getLibrary({ req, res, next, log, newBookId: bookRow.id })
+    return util.getLibrary({ req, res, next, newBookId: bookRow.id })
 
   })
 
@@ -1114,7 +1114,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
       next,
     })
 
-    await util.updateComputedBookAccess({ idpId: req.user.idpId, bookId: req.params.bookId, log })
+    await util.updateComputedBookAccess({ idpId: req.user.idpId, bookId: req.params.bookId })
 
     res.send({ success: true })
 
@@ -1315,7 +1315,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
       next,
     })
 
-    return util.getLibrary({ req, res, next, log })
+    return util.getLibrary({ req, res, next })
 
   })
 
