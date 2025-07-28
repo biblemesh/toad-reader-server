@@ -1,3 +1,4 @@
+const { log } = require('../utils/logger')
 const util = require('../utils/util')
 const { i18n } = require("inline-i18n")
 const sendEmail = require("../utils/sendEmail")

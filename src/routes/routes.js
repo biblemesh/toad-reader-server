@@ -1,3 +1,4 @@
+const { log } = require('../utils/logger')
 /* global requireRouter */
 
 module.exports = function (
@@ -110,7 +111,7 @@ module.exports = function (
     // params.Expires = 60
     // var url = s3.getSignedUrl('getObject', params, function(err, url) {
     //   if(err) {
-    //     console.log('S3 getSignedUrl error on ' + params.Key, err);
+    //     log('S3 getSignedUrl error on ' + params.Key, err);
     //     res.status(404).send({ error: 'Not found' });
     //   } else {
     //     res.redirect(307, url);

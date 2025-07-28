@@ -1,5 +1,6 @@
 const MiniSearch = require("minisearch")
 
+const { log } = require('./logger')
 const { SPACE_OR_PUNCTUATION } = require("./util")
 const getEpubTextNodeDocuments = require("./getEpubTextNodeDocuments")
 

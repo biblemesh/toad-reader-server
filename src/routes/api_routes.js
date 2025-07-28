@@ -1,3 +1,4 @@
+const { log } = require('../utils/logger')
 const getShopifyUserInfo = require('../utils/getShopifyUserInfo')
 var util = require('../utils/util')
 

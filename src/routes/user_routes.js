@@ -5,6 +5,7 @@ const AWS = require('aws-sdk')
 const crypto = require('crypto')
 const fetch = require('node-fetch')
 const jwt = require('jsonwebtoken')
+const { log } = require('../utils/logger')
 
 const util = require('../utils/util')
 const sendEmail = require("../utils/sendEmail")
