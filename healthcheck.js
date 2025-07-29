@@ -6,7 +6,6 @@ const { log } = require('./src/utils/logger')
 
 http
   .get(`http://localhost:${process.env.PORT || 8080}/Shibboleth.sso/Metadata`,
-    { host: `${process.env.DEFAULT_IDP_DOMAIN || 'localhost'}:${process.env.PORT || 8080}` },
     (res) => {
       log(['statusCode', res.statusCode]);
       if ([200, 302, 304].includes(res.statusCode)) {
