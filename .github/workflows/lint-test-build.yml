@@ -57,7 +57,7 @@ jobs:
           GITHASH: ${{ github.sha }}
           GITHUB_REPO: ${{ github.repository }}
           BASE_BRANCH: ${{ github.base_ref || 'bm-develop' }}
-          COMPOSE_EXPERIMENTAL_GIT_REMOTE: true
+          NODE_VERSION: ${{ matrix.node-version }}
 
       - name: Log in and push images
         if: matrix.action == 'build' && matrix.node-version == env.DEFAULT_NODE_VERSION
