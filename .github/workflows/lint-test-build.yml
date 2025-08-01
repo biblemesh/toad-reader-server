@@ -50,6 +50,21 @@ jobs:
       - run: npm ci
         if: steps.cache.outputs.cache-hit != 'true'
 
+      - name: Docker meta
+        if: matrix.action == 'build' && matrix.node-version == env.DEFAULT_NODE_VERSION
+        id: meta
+        uses: docker/metadata-action@v5
+        env:
+          DOCKER_METADATA_SET_OUTPUT_ENV: "true"
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}
+            ${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+
       - name: ci:${{ matrix.action }}
         shell: bash
         run: npm run ci:${{ matrix.action }}
@@ -59,13 +74,19 @@ jobs:
           BASE_BRANCH: ${{ github.base_ref || 'bm-develop' }}
           NODE_VERSION: ${{ matrix.node-version }}
 
-      - name: Log in and push images
+      - run: env
+
+      - name: Login to GitHub Container Registry
+        if: matrix.action == 'build' && matrix.node-version == env.DEFAULT_NODE_VERSION
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push images
         if: matrix.action == 'build' && matrix.node-version == env.DEFAULT_NODE_VERSION
         run: |
-          echo ${GITHUB_TOKEN} | docker login -u ${GITHUB_ACTOR} --password-stdin ghcr.io
           export IMAGE_NAME=$(docker images --format {{.Repository}} | head -n1 | grep ghcr.io)
           echo IMAGE_NAME=$IMAGE_NAME
           if [ ! "$IMAGE_NAME" == "" ]; then docker push "$IMAGE_NAME" --all-tags; fi
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
