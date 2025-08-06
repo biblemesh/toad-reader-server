@@ -91,7 +91,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push images
-        if: matrix.action == 'build' && matrix.node-version == env.DEFAULT_NODE_VERSION
+        # FIXME disabled for now while we wait for permissions
+        if: false && matrix.action == 'build' && matrix.node-version == env.DEFAULT_NODE_VERSION
         run: |
           export IMAGE_NAME=$(docker images --format {{.Repository}} | grep ghcr.io | head -n1)
           echo IMAGE_NAME=$IMAGE_NAME
