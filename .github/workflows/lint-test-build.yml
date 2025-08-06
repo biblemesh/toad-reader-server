@@ -93,6 +93,6 @@ jobs:
       - name: Push images
         if: matrix.action == 'build' && matrix.node-version == env.DEFAULT_NODE_VERSION
         run: |
-          export IMAGE_NAME=$(docker images --format {{.Repository}} | head -n1 | grep ghcr.io)
+          export IMAGE_NAME=$(docker images --format {{.Repository}} | grep ghcr.io | head -n1)
           echo IMAGE_NAME=$IMAGE_NAME
           if [ ! "$IMAGE_NAME" == "" ]; then docker push "$IMAGE_NAME" --all-tags; fi
