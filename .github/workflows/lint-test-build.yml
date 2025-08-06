@@ -59,7 +59,7 @@ jobs:
 
       # Warning: At the moment, old cache entries aren't deleted, so the cache size keeps growing
       - name: Cache Docker layers
-        if: steps.buildx.result == 'success'
+        if: steps.buildx.outcome == 'success'
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/.buildx-cache
@@ -68,7 +68,7 @@ jobs:
             ${{ runner.os }}-buildx-${{ matrix.node-version }}-
 
       - name: Docker meta
-        if: steps.buildx.result == 'success'
+        if: steps.buildx.outcome == 'success'
         id: meta
         uses: docker/metadata-action@v5
         env:
