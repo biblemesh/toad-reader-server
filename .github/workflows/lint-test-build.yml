@@ -50,8 +50,14 @@ jobs:
       - run: npm ci
         if: steps.cache.outputs.cache-hit != 'true'
 
+      - name: Set up Docker Buildx
+        if: matrix.action == 'build'
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
       - name: Docker meta
-        if: matrix.action == 'build' && matrix.node-version == env.DEFAULT_NODE_VERSION
+        if: matrix.action == 'build'
         id: meta
         uses: docker/metadata-action@v5
         env:
