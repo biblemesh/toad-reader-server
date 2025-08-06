@@ -12,8 +12,7 @@ env:
 
 permissions:
   contents: read
-  #deployments: write
-  #packages: write
+  packages: write
 
 jobs:
 
@@ -119,8 +118,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push images
-        # FIXME disabled for now while we wait for permissions
-        if: false && matrix.action == 'build' && matrix.node-version == env.DEFAULT_NODE_VERSION
+        if: matrix.action == 'build' && matrix.node-version == env.DEFAULT_NODE_VERSION
         run: |
           export IMAGE_NAME=$(docker images --format {{.Repository}} | grep ghcr.io | head -n1)
           echo IMAGE_NAME=$IMAGE_NAME
