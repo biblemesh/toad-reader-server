@@ -51,13 +51,24 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Set up Docker Buildx
+        id: buildx
         if: matrix.action == 'build'
         uses: docker/setup-buildx-action@v3
         with:
           install: true
 
+      # Warning: At the moment, old cache entries aren't deleted, so the cache size keeps growing
+      - name: Cache Docker layers
+        if: steps.buildx.result == 'success'
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ matrix.node-version }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ matrix.node-version }}-
+
       - name: Docker meta
-        if: matrix.action == 'build'
+        if: steps.buildx.result == 'success'
         id: meta
         uses: docker/metadata-action@v5
         env:
@@ -78,11 +89,15 @@ jobs:
           echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '"REVISION=" + (.labels."org.opencontainers.image.revision")' >> $GITHUB_ENV
           echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '"TAG_VERSION_NUMBER=" + (.labels."org.opencontainers.image.version")' >> $GITHUB_ENV
           echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '"DATETIMENOW=" + (.labels."org.opencontainers.image.created")' >> $GITHUB_ENV
-          scope="docker-${{ matrix.node-version }}-"
-          echo CACHE_ARGS="--cache-from=type=gha,scope=$scope --cache-to=type=gha,scope=$scope,mode=max" >> $GITHUB_ENV
+          #scope="buildx-${{ matrix.node-version }}-"
+          #echo CACHE_ARGS="--cache-from=type=gha,scope=$scope --cache-to=type=gha,scope=$scope,mode=max" >> $GITHUB_ENV
+          cachesrc="${{ runner.temp }}/.buildx-cache"
+          echo CACHE_ARGS="--cache-from=type=local,src=$cachesrc --cache-to=type=local,src=$cachesrc,mode=max" >> $GITHUB_ENV
 
-      - uses: peaceiris/actions-export-envs@v1.1.0
-        id: envs
+      # FIXME this is disabled because we only have permission to run 'verified' actions
+      # instead we must use the local cache, which needs to be manually cleared from time to time
+      #- uses: peaceiris/actions-export-envs@v1.1.0
+        #id: envs
 
       - name: ci:${{ matrix.action }}
         shell: bash
@@ -92,8 +107,8 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           BASE_BRANCH: ${{ github.base_ref || 'bm-develop' }}
           NODE_VERSION: ${{ matrix.node-version }}
-          ACTIONS_RUNTIME_TOKEN: ${{ steps.envs.outputs.ACTIONS_RUNTIME_TOKEN }}
-          ACTIONS_CACHE_URL: ${{ steps.envs.outputs.ACTIONS_CACHE_URL }}
+          #ACTIONS_RUNTIME_TOKEN: ${{ steps.envs.outputs.ACTIONS_RUNTIME_TOKEN }}
+          #ACTIONS_CACHE_URL: ${{ steps.envs.outputs.ACTIONS_CACHE_URL }}
 
       - name: Login to GitHub Container Registry
         if: matrix.action == 'build' && matrix.node-version == env.DEFAULT_NODE_VERSION
