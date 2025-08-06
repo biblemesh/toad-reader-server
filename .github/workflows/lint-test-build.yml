@@ -92,7 +92,7 @@ jobs:
           #scope="buildx-${{ matrix.node-version }}-"
           #echo CACHE_ARGS="--cache-from=type=gha,scope=$scope --cache-to=type=gha,scope=$scope,mode=max" >> $GITHUB_ENV
           cachesrc="${{ runner.temp }}/.buildx-cache"
-          echo CACHE_ARGS="--cache-from=type=local,src=$cachesrc --cache-to=type=local,src=$cachesrc,mode=max" >> $GITHUB_ENV
+          echo CACHE_ARGS="--cache-from=type=local,src=$cachesrc --cache-to=type=local,dest=$cachesrc,mode=max" >> $GITHUB_ENV
 
       # FIXME this is disabled because we only have permission to run 'verified' actions
       # instead we must use the local cache, which needs to be manually cleared from time to time
