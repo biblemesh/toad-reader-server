@@ -68,10 +68,10 @@ jobs:
       - name: Set variables for ci:build
         if: matrix.action == 'build'
         run: |
-          echo $METADATA | jq -r '"DOCKER_TAGS=\"-t " + (.tags | join(" -t ")) + "\""' >> $GITHUB_ENV
-          echo $METADATA | jq -r '"REVISION=" + (.labels."org.opencontainers.image.revision")' >> $GITHUB_ENV
-          echo $METADATA | jq -r '"TAG_VERSION_NUMBER=" + (.labels."org.opencontainers.image.version")' >> $GITHUB_ENV
-          echo $METADATA | jq -r '"DATETIMENOW=" + (.labels."org.opencontainers.image.created")' >> $GITHUB_ENV
+          echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '"DOCKER_TAGS=\"-t " + (.tags | join(" -t ")) + "\""' >> $GITHUB_ENV
+          echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '"REVISION=" + (.labels."org.opencontainers.image.revision")' >> $GITHUB_ENV
+          echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '"TAG_VERSION_NUMBER=" + (.labels."org.opencontainers.image.version")' >> $GITHUB_ENV
+          echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '"DATETIMENOW=" + (.labels."org.opencontainers.image.created")' >> $GITHUB_ENV
 
       - name: ci:${{ matrix.action }}
         shell: bash
