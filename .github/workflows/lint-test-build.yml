@@ -81,6 +81,9 @@ jobs:
           scope="docker-${{ matrix.node-version }}-"
           echo CACHE_ARGS="--cache-from=type=gha,scope=$scope --cache-to=type=gha,scope=$scope,mode=max" >> $GITHUB_ENV
 
+      - uses: peaceiris/actions-export-envs@v1.1.0
+        id: envs
+
       - name: ci:${{ matrix.action }}
         shell: bash
         run: npm run ci:${{ matrix.action }}
@@ -89,6 +92,8 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           BASE_BRANCH: ${{ github.base_ref || 'bm-develop' }}
           NODE_VERSION: ${{ matrix.node-version }}
+          ACTIONS_RUNTIME_TOKEN: ${{ steps.envs.outputs.ACTIONS_RUNTIME_TOKEN }}
+          ACTIONS_CACHE_URL: ${{ steps.envs.outputs.ACTIONS_CACHE_URL }}
 
       - name: Login to GitHub Container Registry
         if: matrix.action == 'build' && matrix.node-version == env.DEFAULT_NODE_VERSION
