@@ -73,7 +73,7 @@ jobs:
       - name: Docker cache size fix
         if: steps.cache-docker.outcome == 'success'
         run: |
-          mv ${{ runner.temp }}/.buildx-cache ${{ runner.temp }}/.buildx-cache-old
+          mv -v ${{ runner.temp }}/.buildx-cache ${{ runner.temp }}/.buildx-cache-old || true
 
       - name: Docker meta
         if: steps.buildx.outcome == 'success'
