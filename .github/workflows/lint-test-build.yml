@@ -54,7 +54,7 @@ jobs:
         id: qemu
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: all
+          platforms: amd64,arm64
 
       - name: Set up Docker Buildx
         id: buildx
