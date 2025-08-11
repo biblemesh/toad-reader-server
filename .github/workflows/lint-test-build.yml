@@ -63,8 +63,8 @@ jobs:
         with:
           install: true
 
-      # Warning: At the moment, old cache entries aren't deleted, so the cache size keeps growing
       - name: Cache Docker layers
+        id: cache-docker
         if: steps.buildx.outcome == 'success'
         uses: actions/cache@v4
         with:
@@ -72,6 +72,11 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ matrix.node-version }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-${{ matrix.node-version }}-
+
+      - name: Docker cache size fix
+        if: steps.cache-docker.outcome == 'success'
+        run: |
+          mv ${{ runner.temp }}/.buildx-cache ${{ runner.temp }}/.buildx-cache-old
 
       - name: Docker meta
         if: steps.buildx.outcome == 'success'
@@ -98,7 +103,7 @@ jobs:
           #scope="buildx-${{ matrix.node-version }}-"
           #echo CACHE_ARGS="--cache-from=type=gha,scope=$scope --cache-to=type=gha,scope=$scope,mode=max" >> $GITHUB_ENV
           cachesrc="${{ runner.temp }}/.buildx-cache"
-          echo CACHE_ARGS="--cache-from=type=local,src=$cachesrc --cache-to=type=local,dest=$cachesrc,mode=max" >> $GITHUB_ENV
+          echo CACHE_ARGS="--cache-from=type=local,src=$cachesrc-old --cache-to=type=local,dest=$cachesrc,mode=max" >> $GITHUB_ENV
           echo EXTRA_ARGS=--platform linux/amd64,linux/arm64 --push >> $GITHUB_ENV
 
       # FIXME this is disabled because we only have permission to run 'verified' actions
