@@ -49,6 +49,13 @@ jobs:
       - run: npm ci
         if: steps.cache.outputs.cache-hit != 'true'
 
+      - name: Set up QEMU
+        if: matrix.action == 'build'
+        id: qemu
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
       - name: Set up Docker Buildx
         id: buildx
         if: matrix.action == 'build'
@@ -92,6 +99,7 @@ jobs:
           #echo CACHE_ARGS="--cache-from=type=gha,scope=$scope --cache-to=type=gha,scope=$scope,mode=max" >> $GITHUB_ENV
           cachesrc="${{ runner.temp }}/.buildx-cache"
           echo CACHE_ARGS="--cache-from=type=local,src=$cachesrc --cache-to=type=local,dest=$cachesrc,mode=max" >> $GITHUB_ENV
+          echo PLATFORMS=--platform ${{ steps.qemu.outputs.platforms }} >> $GITHUB_ENV
 
       # FIXME this is disabled because we only have permission to run 'verified' actions
       # instead we must use the local cache, which needs to be manually cleared from time to time
