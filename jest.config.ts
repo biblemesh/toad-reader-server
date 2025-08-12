@@ -1,15 +1,20 @@
-import type { Config } from 'jest';
-import { createDefaultPreset } from 'ts-jest';
-
-const tsJestTransformCfg = createDefaultPreset().transform;
-
-const config: Config = {
+export default {
+  preset: 'ts-jest',
   maxWorkers: 3,
   modulePathIgnorePatterns: ['crons'],
   testEnvironment: 'node',
+  testMatch: ['**/__tests__/**/*.test.ts'],
   transform: {
-    ...tsJestTransformCfg,
+    '^.+\\.(ts|tsx)$': 'ts-jest',
   },
+  collectCoverageFrom: [
+    'src/**/*.{ts,js}',
+    '!src/**/*.test.{ts,js}',
+    '!src/**/*.d.ts',
+    '!__tests__/**',
+  ],
+  clearMocks: true,
+  restoreMocks: true,
+  roots: ['<rootDir>/src', '<rootDir>/__tests__'],
+  modulePaths: ['<rootDir>/src'],
 };
-
-export default config;

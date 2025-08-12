@@ -24,11 +24,51 @@
 
 # Development
 
-`npm start`
+   ```bash
+   npm start
+   ```
+
+# Running Tests
+
+## Available Commands
+
+- Run all tests:
+
+  ```bash
+  npm test
+  ```
+
+- Run a specific test file (e.g., `auth_routes.test.ts`):
+
+  ```bash
+  npm test -- auth_routes
+  ```
+  `npm run push-to-aws`
+
+- Watch mode:
+
+  ```bash
+  npm test -- --watch
+  ```
+
+## Test Types
+
+- ✅ Route tests (e.g., `auth_routes.test.ts`, `user_routes.test.ts`)
+- ✅ Integration tests in `__tests__/integration/`
+- ✅ Unit tests in `__tests__/utils/`
+- ✅ CI/CD compatible
+- ✅ Type-safe, isolated test environments
+
+## Notes
+
+- Make sure your `.env` files are correctly populated.
+- Watch out for default setting assumptions (e.g., default language, video quality).
+- All global states should be reset between tests to prevent cross-contamination.
 
 # Updating Staging
-
-`npm run push-to-aws`
+   ```bash
+   npm run push-to-aws
+   ```
 
 # Demo
 
