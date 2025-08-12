@@ -16,7 +16,7 @@ jobs:
   build:
     name: ${{ matrix.action }} (${{ matrix.node-version }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
