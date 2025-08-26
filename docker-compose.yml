@@ -9,9 +9,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.certs
-    environment:
-      - EREADER_HOST=read.test
-      - SHIBBOLETH_IDENTITY_PROVIDER_HOST=op-sp-1.test  # FIXME use env file
+    env_file: .env.shibboleth
     volumes:
       - ./add-data-to-sql-file.sh:/data/entrypoint.sh:ro
       - ./seeds.sql:/data/seeds.sql:ro
@@ -50,7 +48,7 @@ services:
       retries: 6
 
   reader:
-    image: biblemesh/toad-reader-server
+    image: ghcr.io/biblemesh/toad-reader-server:pr-29  # FIXME tag
     depends_on:
       mysql:
         condition: service_healthy
@@ -135,7 +133,7 @@ services:
 include:
   - path: git@github.com:biblemesh/ereader-callback.git#16d35c3cc24b858910a9a7a7c1bb5ef14a0aeb52
     env_file: .env.callback
-  - path: git@github.com:biblemesh/shibboleth.git#70e2f68fae56cab4c93ad36d04b4bb50eed4dd72:.devcontainer/shibboleth/docker-compose.yml
+  - path: git@github.com:biblemesh/shibboleth.git#c3f16e47119cb5f9f911bc518bd6c9020d79bf9f
     env_file: .env.shibboleth
 
 volumes:
