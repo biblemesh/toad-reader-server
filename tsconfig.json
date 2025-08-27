@@ -1,14 +1,22 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
-    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "noEmit": true,
     "resolveJsonModule": true,
-    "types": ["jest", "node"],
-    "noEmit": true
+    "skipLibCheck": true,
+    "target": "ES2020",
+    "types": [
+      "jest",
+      "node"
+    ]
   },
-  "include": ["__tests__/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src"]
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "include": [
+    "src/**/*.test.ts"
+  ]
 }

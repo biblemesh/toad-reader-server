@@ -3,7 +3,7 @@ export default {
   maxWorkers: 3,
   modulePathIgnorePatterns: ['crons'],
   testEnvironment: 'node',
-  testMatch: ['**/__tests__/**/*.test.ts'],
+  testMatch: ['**/src/**/*.test.ts'],
   transform: {
     '^.+\\.(ts|tsx)$': 'ts-jest',
   },
@@ -11,10 +11,9 @@ export default {
     'src/**/*.{ts,js}',
     '!src/**/*.test.{ts,js}',
     '!src/**/*.d.ts',
-    '!__tests__/**',
   ],
   clearMocks: true,
   restoreMocks: true,
-  roots: ['<rootDir>/src', '<rootDir>/__tests__'],
+  roots: ['<rootDir>/src'],
   modulePaths: ['<rootDir>/src'],
 };

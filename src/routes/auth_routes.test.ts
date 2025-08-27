@@ -4,10 +4,11 @@ import request from 'supertest';
 
 // ===== TYPE DECLARATIONS =====
 declare global {
-  // eslint-disable-next-line no-var
-  var connection: {
-    query: jest.Mock;
-  };
+  interface Global {
+    connection: {
+      query: jest.Mock;
+    };
+  }
 }
 
 interface MockUser {
@@ -64,11 +65,11 @@ const mockUtilFunctions = {
 const mockSendEmail = jest.fn();
 const mockI18n = jest.fn();
 
-jest.mock('../../src/utils/util', () => mockUtilFunctions);
-jest.mock('../../src/utils/sendEmail', () => mockSendEmail);
+jest.mock('../utils/util', () => mockUtilFunctions);
+jest.mock('../utils/sendEmail', () => mockSendEmail);
 jest.mock('inline-i18n', () => ({ i18n: mockI18n }));
 
-import authRoutes from '../../src/routes/auth_routes.js';
+import authRoutes from './auth_routes.js';
 
 // ===== MOCK FACTORY FUNCTIONS =====
 const createMockUser = (overrides: Partial<MockUser> = {}): MockUser => ({
@@ -79,7 +80,7 @@ const createMockUser = (overrides: Partial<MockUser> = {}): MockUser => ({
   ...overrides,
 });
 
-const createMockAdminUser = (overrides: Partial<MockUser> = {}): MockUser => 
+const createMockAdminUser = (overrides: Partial<MockUser> = {}): MockUser =>
   createMockUser({ isAdmin: true, ...overrides });
 
 const createMockIDP = (overrides: Partial<MockIDP> = {}): MockIDP => ({
@@ -99,8 +100,18 @@ const setupSuccessfulMocks = (): void => {
   mockUtilFunctions.getIDPDomain.mockReturnValue('example.com');
   mockUtilFunctions.getDataDomain.mockReturnValue('data.example.com');
   mockUtilFunctions.getDataOrigin.mockReturnValue('https://data.example.com');
-  mockUtilFunctions.escapeHTML.mockImplementation((str: string) => 
-    str.replace(/[&<>"']/g, (match) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[match] || match))
+  mockUtilFunctions.escapeHTML.mockImplementation((str: string) =>
+    str.replace(
+      /[&<>"']/g,
+      (match) =>
+        ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+        })[match] || match,
+    ),
   );
   mockUtilFunctions.isValidEmail.mockReturnValue(true);
   mockUtilFunctions.createAccessCode.mockReturnValue('123456');
@@ -109,45 +120,65 @@ const setupSuccessfulMocks = (): void => {
   mockUtilFunctions.getUserInfo.mockResolvedValue(createMockUser());
   mockUtilFunctions.updateUserInfo.mockResolvedValue(createMockUser());
   mockUtilFunctions.runQuery.mockResolvedValue([]);
-  mockUtilFunctions.timestampToMySQLDatetime.mockReturnValue('2022-01-01 00:00:00');
-  mockUtilFunctions.setIdpLang.mockImplementation(() => (_req: Request, _res: Response, next: NextFunction) => {
-    (_req as RequestWithUser).idpLang = 'en';
-    next();
-  });
-  mockUtilFunctions.sessionStore.get.mockImplementation((_id: string, callback: (err: Error | null, value?: string) => void) => {
-    callback(null, JSON.stringify([]));
-  });
-  mockUtilFunctions.sessionStore.set.mockImplementation((_id: string, _value: string, callback: (err: Error | null) => void) => {
-    callback(null);
-  });
+  mockUtilFunctions.timestampToMySQLDatetime.mockReturnValue(
+    '2022-01-01 00:00:00',
+  );
+  mockUtilFunctions.setIdpLang.mockImplementation(
+    () => (_req: Request, _res: Response, next: NextFunction) => {
+      (_req as RequestWithUser).idpLang = 'en';
+      next();
+    },
+  );
+  mockUtilFunctions.sessionStore.get.mockImplementation(
+    (_id: string, callback: (err: Error | null, value?: string) => void) => {
+      callback(null, JSON.stringify([]));
+    },
+  );
+  mockUtilFunctions.sessionStore.set.mockImplementation(
+    (_id: string, _value: string, callback: (err: Error | null) => void) => {
+      callback(null);
+    },
+  );
   mockSendEmail.mockResolvedValue(undefined);
   mockI18n.mockImplementation((text: string) => text);
 };
 
 const setupFailureMocks = {
   databaseError: (): void => {
-    mockUtilFunctions.runQuery.mockRejectedValue(new Error('Database connection failed'));
-    global.connection.query.mockImplementation((_query: string, _params: unknown, callback: (err: Error | null) => void) => {
-      callback(new Error('Database connection failed'));
-    });
+    mockUtilFunctions.runQuery.mockRejectedValue(
+      new Error('Database connection failed'),
+    );
+    global.connection.query.mockImplementation(
+      (
+        _query: string,
+        _params: unknown,
+        callback: (err: Error | null) => void,
+      ) => {
+        callback(new Error('Database connection failed'));
+      },
+    );
   },
-  
+
   sessionStoreError: (): void => {
-    mockUtilFunctions.sessionStore.get.mockImplementation((_id: string, callback: (err: Error | null) => void) => {
-      callback(new Error('SessionStore error'));
-    });
+    mockUtilFunctions.sessionStore.get.mockImplementation(
+      (_id: string, callback: (err: Error | null) => void) => {
+        callback(new Error('SessionStore error'));
+      },
+    );
   },
-  
+
   corruptedSessionData: (): void => {
-    mockUtilFunctions.sessionStore.get.mockImplementation((_id: string, callback: (err: Error | null, value: string) => void) => {
-      callback(null, 'invalid-json-data');
-    });
+    mockUtilFunctions.sessionStore.get.mockImplementation(
+      (_id: string, callback: (err: Error | null, value: string) => void) => {
+        callback(null, 'invalid-json-data');
+      },
+    );
   },
-  
+
   expiredAccessCode: (): void => {
     mockUtilFunctions.getLoginInfoByAccessCode.mockResolvedValue(null);
   },
-  
+
   duplicateAccessCode: (): void => {
     mockUtilFunctions.getLoginInfoByAccessCode
       .mockResolvedValueOnce({ email: 'existing@example.com' })
@@ -156,13 +187,20 @@ const setupFailureMocks = {
       .mockReturnValueOnce('DUPLICATE')
       .mockReturnValueOnce('UNIQUE123');
   },
-  
+
   deviceLoginLimitExceeded: (limit: number): void => {
-    const sessions = Array.from({ length: limit + 2 }, (_, i) => `session${i + 1}`);
-    mockUtilFunctions.sessionStore.get.mockImplementation((_id: string, callback: (err: Error | null, value: string) => void) => {
-      callback(null, JSON.stringify(sessions));
-    });
-    mockUtilFunctions.runQuery.mockResolvedValue([{ id: 1, deviceLoginLimit: limit }]);
+    const sessions = Array.from(
+      { length: limit + 2 },
+      (_, i) => `session${i + 1}`,
+    );
+    mockUtilFunctions.sessionStore.get.mockImplementation(
+      (_id: string, callback: (err: Error | null, value: string) => void) => {
+        callback(null, JSON.stringify(sessions));
+      },
+    );
+    mockUtilFunctions.runQuery.mockResolvedValue([
+      { id: 1, deviceLoginLimit: limit },
+    ]);
   },
 };
 
@@ -183,7 +221,10 @@ const setupUnauthenticatedRequest = () => {
   };
 };
 
-const setupPassportAuthenticate = (behavior: 'success' | 'failure' | 'custom', customCallback?: (req: Request, res: Response, next?: NextFunction) => void) => {
+const setupPassportAuthenticate = (
+  behavior: 'success' | 'failure' | 'custom',
+  customCallback?: (req: Request, res: Response, next?: NextFunction) => void,
+) => {
   const mockAuthenticate = jest.fn().mockImplementation(() => {
     return (req: Request, res: Response, next?: NextFunction) => {
       switch (behavior) {
@@ -199,7 +240,7 @@ const setupPassportAuthenticate = (behavior: 'success' | 'failure' | 'custom', c
       }
     };
   });
-  
+
   passport.authenticate = mockAuthenticate;
   return mockAuthenticate;
 };
@@ -207,7 +248,10 @@ const setupPassportAuthenticate = (behavior: 'success' | 'failure' | 'custom', c
 // ===== TEST SUITE =====
 describe('auth_routes', () => {
   let app: Express;
-  let mockAuthFuncs: Record<string, { logout: jest.Mock; getMetaData: jest.Mock }>;
+  let mockAuthFuncs: Record<
+    string,
+    { logout: jest.Mock; getMetaData: jest.Mock }
+  >;
   let mockEnsureAuthenticated: jest.Mock;
   let mockLogIn: jest.Mock;
   let mockLog: jest.Mock;
@@ -237,14 +281,23 @@ describe('auth_routes', () => {
 
     // Mock global dependencies
     global.connection = {
-      query: jest.fn((query: string, params: unknown, callback?: (err: Error | null, results: unknown[]) => void) => {
-        if (typeof params === 'function') {
-          const cb = params as (err: Error | null, results: unknown[]) => void;
-          cb(null, [createMockIDP()]);
-        } else if (callback) {
-          callback(null, [createMockIDP()]);
-        }
-      }),
+      query: jest.fn(
+        (
+          query: string,
+          params: unknown,
+          callback?: (err: Error | null, results: unknown[]) => void,
+        ) => {
+          if (typeof params === 'function') {
+            const cb = params as (
+              err: Error | null,
+              results: unknown[],
+            ) => void;
+            cb(null, [createMockIDP()]);
+          } else if (callback) {
+            callback(null, [createMockIDP()]);
+          }
+        },
+      ),
     };
 
     // Mock process.env
@@ -253,7 +306,14 @@ describe('auth_routes', () => {
     process.env.IS_DEV = 'true';
 
     // Initialize routes with mocked dependencies
-    authRoutes(app, passport, mockAuthFuncs, mockEnsureAuthenticated, mockLogIn, mockLog);
+    authRoutes(
+      app,
+      passport,
+      mockAuthFuncs,
+      mockEnsureAuthenticated,
+      mockLogIn,
+      mockLog,
+    );
   });
 
   afterEach(() => {
@@ -284,11 +344,15 @@ describe('auth_routes', () => {
         .expect(200);
 
       expect(response.body).toEqual({ success: true });
-      
+
       const cookies = response.headers['set-cookie'];
       expect(cookies).toBeDefined();
-      expect(cookies.some((cookie: string) => cookie.includes('session=abc123'))).toBe(true);
-      expect(cookies.some((cookie: string) => cookie.includes('user=john'))).toBe(true);
+      expect(
+        cookies.some((cookie: string) => cookie.includes('session=abc123')),
+      ).toBe(true);
+      expect(
+        cookies.some((cookie: string) => cookie.includes('user=john')),
+      ).toBe(true);
     });
 
     it('should handle malformed cookie strings gracefully', async () => {
@@ -317,7 +381,9 @@ describe('auth_routes', () => {
       expect(response.body).toEqual({ success: true });
       const cookies = response.headers['set-cookie'];
       expect(cookies).toBeDefined();
-      expect(cookies.some((cookie: string) => cookie.includes('special='))).toBe(true);
+      expect(
+        cookies.some((cookie: string) => cookie.includes('special=')),
+      ).toBe(true);
     });
   });
 
@@ -326,14 +392,14 @@ describe('auth_routes', () => {
     it('should return 401 when user is not authenticated', async () => {
       mockEnsureAuthenticated.mockImplementation(setupUnauthenticatedRequest());
 
-      await request(app)
-        .get('/confirmlogin')
-        .expect(401);
+      await request(app).get('/confirmlogin').expect(401);
     });
 
     it('should return HTML with user info when authenticated', async () => {
       const mockUser = createMockUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
 
       const response = await request(app)
         .get('/confirmlogin')
@@ -354,11 +420,11 @@ describe('auth_routes', () => {
         fullname: 'Jane Smith',
         email: 'jane@example.com',
       });
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
 
-      const response = await request(app)
-        .get('/confirmlogin')
-        .expect(200);
+      const response = await request(app).get('/confirmlogin').expect(200);
 
       expect(response.text).toContain('"id":123');
       expect(response.text).toContain('"fullname":"Jane Smith"');
@@ -369,11 +435,11 @@ describe('auth_routes', () => {
 
     it('should handle missing user properties gracefully', async () => {
       const incompleteUser = { id: 1 } as MockUser;
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(incompleteUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(incompleteUser),
+      );
 
-      const response = await request(app)
-        .get('/confirmlogin')
-        .expect(200);
+      const response = await request(app).get('/confirmlogin').expect(200);
 
       expect(response.text).toContain('"id":1');
     });
@@ -384,18 +450,16 @@ describe('auth_routes', () => {
     it('should return 401 when user is not authenticated', async () => {
       mockEnsureAuthenticated.mockImplementation(setupUnauthenticatedRequest());
 
-      await request(app)
-        .get('/confirmlogin-web')
-        .expect(401);
+      await request(app).get('/confirmlogin-web').expect(401);
     });
 
     it('should redirect to frontend with login info when authenticated', async () => {
       const mockUser = createMockUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
 
-      const response = await request(app)
-        .get('/confirmlogin-web')
-        .expect(302);
+      const response = await request(app).get('/confirmlogin-web').expect(302);
 
       expect(response.headers.location).toContain('https://example.com');
       expect(response.headers.location).toContain('loginInfo=');
@@ -403,7 +467,9 @@ describe('auth_routes', () => {
 
     it('should include hash parameter in redirect when provided', async () => {
       const mockUser = createMockUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
 
       const response = await request(app)
         .get('/confirmlogin-web?hash=somevalue')
@@ -414,19 +480,19 @@ describe('auth_routes', () => {
 
     it('should properly encode login info in redirect URL', async () => {
       const mockUser = createMockUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
 
-      const response = await request(app)
-        .get('/confirmlogin-web')
-        .expect(302);
+      const response = await request(app).get('/confirmlogin-web').expect(302);
 
       const location = response.headers.location;
       expect(location).toContain('loginInfo=');
-      
+
       const url = new URL(location);
       const loginInfoParam = url.searchParams.get('loginInfo');
       expect(loginInfoParam).toBeTruthy();
-      
+
       const loginInfo = JSON.parse(decodeURIComponent(loginInfoParam!));
       expect(loginInfo).toHaveProperty('cookie');
       expect(loginInfo).toHaveProperty('userInfo');
@@ -442,11 +508,11 @@ describe('auth_routes', () => {
     it('should handle missing frontend origin gracefully', async () => {
       mockUtilFunctions.getFrontEndOrigin.mockReturnValue('');
       const mockUser = createMockUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
 
-      await request(app)
-        .get('/confirmlogin-web')
-        .expect(302);
+      await request(app).get('/confirmlogin-web').expect(302);
     });
   });
 
@@ -460,13 +526,15 @@ describe('auth_routes', () => {
         .set('host', 'example.com')
         .expect(302);
 
-      expect(passport.authenticate).toHaveBeenCalledWith('example.com', { failureRedirect: '/login/fail' });
+      expect(passport.authenticate).toHaveBeenCalledWith('example.com', {
+        failureRedirect: '/login/fail',
+      });
       expect(mockLog).toHaveBeenCalledWith('Authenticate user', 2);
     });
 
     it('should set RelayState with cookie override', async () => {
       let capturedRelayState: string | undefined;
-      
+
       setupPassportAuthenticate('custom', (req: Request, res: Response) => {
         capturedRelayState = req.query.RelayState as string;
         res.redirect('/');
@@ -497,9 +565,7 @@ describe('auth_routes', () => {
     it('should handle missing host header', async () => {
       setupPassportAuthenticate('success');
 
-      await request(app)
-        .get('/login/test-idp')
-        .expect(302);
+      await request(app).get('/login/test-idp').expect(302);
 
       expect(passport.authenticate).toHaveBeenCalled();
     });
@@ -518,10 +584,13 @@ describe('auth_routes', () => {
 
   describe('POST /login/:idpId/callback', () => {
     it('should authenticate and redirect to default login redirect', async () => {
-      setupPassportAuthenticate('custom', (req: RequestWithUser, _res: Response, next: NextFunction) => {
-        req.session = { loginRedirect: '/confirmlogin' };
-        next!();
-      });
+      setupPassportAuthenticate(
+        'custom',
+        (req: RequestWithUser, _res: Response, next: NextFunction) => {
+          req.session = { loginRedirect: '/confirmlogin' };
+          next!();
+        },
+      );
 
       const response = await request(app)
         .post('/login/test-idp/callback')
@@ -533,10 +602,13 @@ describe('auth_routes', () => {
     });
 
     it('should redirect to custom login redirect when set in session', async () => {
-      setupPassportAuthenticate('custom', (req: RequestWithUser, _res: Response, next: NextFunction) => {
-        req.session = { loginRedirect: '/custom-redirect' };
-        next!();
-      });
+      setupPassportAuthenticate(
+        'custom',
+        (req: RequestWithUser, _res: Response, next: NextFunction) => {
+          req.session = { loginRedirect: '/custom-redirect' };
+          next!();
+        },
+      );
 
       const response = await request(app)
         .post('/login/test-idp/callback')
@@ -544,14 +616,20 @@ describe('auth_routes', () => {
         .expect(302);
 
       expect(response.headers.location).toBe('/custom-redirect');
-      expect(mockLog).toHaveBeenCalledWith(['Post login redirect', '/custom-redirect']);
+      expect(mockLog).toHaveBeenCalledWith([
+        'Post login redirect',
+        '/custom-redirect',
+      ]);
     });
 
     it('should handle missing session loginRedirect gracefully', async () => {
-      setupPassportAuthenticate('custom', (req: RequestWithUser, _res: Response, next: NextFunction) => {
-        req.session = {};
-        next!();
-      });
+      setupPassportAuthenticate(
+        'custom',
+        (req: RequestWithUser, _res: Response, next: NextFunction) => {
+          req.session = {};
+          next!();
+        },
+      );
 
       const response = await request(app)
         .post('/login/test-idp/callback')
@@ -579,15 +657,13 @@ describe('auth_routes', () => {
       const testApp = express();
       testApp.use(express.json());
       testApp.use(express.urlencoded({ extended: true }));
-      
-      testApp.get('/login/fail', function(req, res) {
+
+      testApp.get('/login/fail', function (req, res) {
         mockLog('Report login failure');
         res.status(401).send('Login failed');
       });
 
-      const response = await request(testApp)
-        .get('/login/fail')
-        .expect(401);
+      const response = await request(testApp).get('/login/fail').expect(401);
 
       expect(response.text).toBe('Login failed');
       expect(mockLog).toHaveBeenCalledWith('Report login failure');
@@ -601,15 +677,22 @@ describe('auth_routes', () => {
       testApp.use(express.json());
       testApp.use(express.urlencoded({ extended: true }));
 
-      testApp.get('/logout', async (req: Request & { isAuthenticated?: () => boolean }, res: Response, next: NextFunction) => {
-        if (req.isAuthenticated && req.isAuthenticated()) return next();
+      testApp.get(
+        '/logout',
+        async (
+          req: Request & { isAuthenticated?: () => boolean },
+          res: Response,
+          next: NextFunction,
+        ) => {
+          if (req.isAuthenticated && req.isAuthenticated()) return next();
 
-        if (req.query.noredirect) {
-          res.send({ success: true, detail: 'was not logged in' });
-        } else {
-          res.redirect('https://example.com');
-        }
-      });
+          if (req.query.noredirect) {
+            res.send({ success: true, detail: 'was not logged in' });
+          } else {
+            res.redirect('https://example.com');
+          }
+        },
+      );
 
       await request(testApp)
         .get('/logout?noredirect=1')
@@ -622,30 +705,39 @@ describe('auth_routes', () => {
       testApp.use(express.json());
       testApp.use(express.urlencoded({ extended: true }));
 
-      testApp.get('/logout', async (req: Request & { isAuthenticated?: () => boolean }, res: Response, next: NextFunction) => {
-        if (req.isAuthenticated && req.isAuthenticated()) return next();
+      testApp.get(
+        '/logout',
+        async (
+          req: Request & { isAuthenticated?: () => boolean },
+          res: Response,
+          next: NextFunction,
+        ) => {
+          if (req.isAuthenticated && req.isAuthenticated()) return next();
 
-        if (req.query.noredirect) {
-          res.send({ success: true, detail: 'was not logged in' });
-        } else {
-          res.redirect('https://example.com');
-        }
-      });
+          if (req.query.noredirect) {
+            res.send({ success: true, detail: 'was not logged in' });
+          } else {
+            res.redirect('https://example.com');
+          }
+        },
+      );
 
-      await request(testApp)
-        .get('/logout')
-        .expect(302);
+      await request(testApp).get('/logout').expect(302);
     });
   });
 
   describe('GET /logout (authenticated)', () => {
     it('should logout user and redirect via authFuncs when available', async () => {
       const mockUser = createMockUser({ idpDeviceLoginLimit: 3 });
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
 
-      mockUtilFunctions.sessionStore.get.mockImplementation((_id: string, callback: (err: Error | null, value: string) => void) => {
-        callback(null, JSON.stringify(['session1', 'session2']));
-      });
+      mockUtilFunctions.sessionStore.get.mockImplementation(
+        (_id: string, callback: (err: Error | null, value: string) => void) => {
+          callback(null, JSON.stringify(['session1', 'session2']));
+        },
+      );
 
       const response = await request(app)
         .get('/logout')
@@ -658,20 +750,21 @@ describe('auth_routes', () => {
 
     it('should handle logout without authFuncs for the host', async () => {
       const mockUser = createMockUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
 
-      await request(app)
-        .get('/logout')
-        .set('host', 'unknown.com')
-        .expect(302);
+      await request(app).get('/logout').set('host', 'unknown.com').expect(302);
 
       expect(mockAuthFuncs['example.com'].logout).not.toHaveBeenCalled();
     });
 
     it('should delete push token when x-push-token header is present', async () => {
       const mockUser = createMockUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
-      
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
+
       // The test should just verify the route completes successfully
       const response = await request(app)
         .get('/logout')
@@ -685,7 +778,9 @@ describe('auth_routes', () => {
 
     it('should not delete push token when header is "none"', async () => {
       const mockUser = createMockUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
 
       await request(app)
         .get('/logout')
@@ -698,29 +793,29 @@ describe('auth_routes', () => {
 
     it('should handle sessionStore errors gracefully', async () => {
       const mockUser = createMockUser({ idpDeviceLoginLimit: 3 });
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
       setupFailureMocks.sessionStoreError();
 
-      await request(app)
-        .get('/logout')
-        .set('host', 'example.com')
-        .expect(302);
+      await request(app).get('/logout').set('host', 'example.com').expect(302);
     });
 
     it('should handle corrupted session data during logout', async () => {
       const mockUser = createMockUser({ idpDeviceLoginLimit: 3 });
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
       setupFailureMocks.corruptedSessionData();
 
-      await request(app)
-        .get('/logout')
-        .set('host', 'example.com')
-        .expect(302);
+      await request(app).get('/logout').set('host', 'example.com').expect(302);
     });
 
     it('should handle database errors during push token deletion', async () => {
       const mockUser = createMockUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
       mockUtilFunctions.runQuery.mockRejectedValue(new Error('Database error'));
 
       await request(app)
@@ -740,44 +835,54 @@ describe('auth_routes', () => {
         .expect(200)
         .expect({ success: true });
 
-      expect(mockLog).toHaveBeenCalledWith('Logout callback (will delete cookie)', 2);
+      expect(mockLog).toHaveBeenCalledWith(
+        'Logout callback (will delete cookie)',
+        2,
+      );
     });
 
     it('should handle logout callback without noredirect', async () => {
-      await request(app)
-        .get('/logout/callback')
-        .expect(302);
+      await request(app).get('/logout/callback').expect(302);
 
-      expect(mockLog).toHaveBeenCalledWith('Logout callback (will delete cookie)', 2);
+      expect(mockLog).toHaveBeenCalledWith(
+        'Logout callback (will delete cookie)',
+        2,
+      );
     });
 
     it('should handle POST /login route', async () => {
-      await request(app)
-        .post('/login')
-        .expect(302);
+      await request(app).post('/login').expect(302);
     });
 
     it('should clear device login limit when user is present', async () => {
       const mockUser = createMockUser({ idpDeviceLoginLimit: 3 });
-      
+
       const testApp = express();
       testApp.use(express.json());
       testApp.use(express.urlencoded({ extended: true }));
-      
-      testApp.all('/logout/callback', async (req: RequestWithUser, res: Response) => {
-        req.user = mockUser;
-        req.sessionID = 'test-session';
-        
-        mockUtilFunctions.sessionStore.get.mockImplementation((_id: string, callback: (err: Error | null, value: string) => void) => {
-          callback(null, JSON.stringify(['session1', 'test-session']));
-        });
 
-        if ((req as Request).query.noredirect) {
-          res.send({ success: true });
-        } else {
-          res.redirect('https://example.com');
-        }
-      });
+      testApp.all(
+        '/logout/callback',
+        async (req: RequestWithUser, res: Response) => {
+          req.user = mockUser;
+          req.sessionID = 'test-session';
+
+          mockUtilFunctions.sessionStore.get.mockImplementation(
+            (
+              _id: string,
+              callback: (err: Error | null, value: string) => void,
+            ) => {
+              callback(null, JSON.stringify(['session1', 'test-session']));
+            },
+          );
+
+          if ((req as Request).query.noredirect) {
+            res.send({ success: true });
+          } else {
+            res.redirect('https://example.com');
+          }
+        },
+      );
 
       await request(testApp)
         .get('/logout/callback')
@@ -789,21 +894,24 @@ describe('auth_routes', () => {
     it('should handle session clearing errors gracefully', async () => {
       const mockUser = createMockUser({ idpDeviceLoginLimit: 3 });
       setupFailureMocks.sessionStoreError();
-      
+
       const testApp = express();
       testApp.use(express.json());
       testApp.use(express.urlencoded({ extended: true }));
-      
-      testApp.all('/logout/callback', async (req: RequestWithUser, res: Response) => {
-        req.user = mockUser;
-        req.sessionID = 'test-session';
 
-        if ((req as Request).query.noredirect) {
-          res.send({ success: true });
-        } else {
-          res.redirect('https://example.com');
-        }
-      });
+      testApp.all(
+        '/logout/callback',
+        async (req: RequestWithUser, res: Response) => {
+          req.user = mockUser;
+          req.sessionID = 'test-session';
+
+          if ((req as Request).query.noredirect) {
+            res.send({ success: true });
+          } else {
+            res.redirect('https://example.com');
+          }
+        },
+      );
 
       await request(testApp)
         .get('/logout/callback')
@@ -831,18 +939,22 @@ describe('auth_routes', () => {
     });
 
     it('should escape HTML in URLs for security', async () => {
-      mockUtilFunctions.escapeHTML.mockReturnValue('&lt;script&gt;alert(1)&lt;/script&gt;');
+      mockUtilFunctions.escapeHTML.mockReturnValue(
+        '&lt;script&gt;alert(1)&lt;/script&gt;',
+      );
 
-      await request(app)
-        .get('/urls/example.com')
-        .expect(200);
+      await request(app).get('/urls/example.com').expect(200);
 
       expect(mockUtilFunctions.escapeHTML).toHaveBeenCalled();
     });
 
     it('should generate correct links for each environment', async () => {
-      mockUtilFunctions.getFrontEndOrigin.mockReturnValue('https://frontend.example.com');
-      mockUtilFunctions.getDataOrigin.mockReturnValue('https://backend.example.com');
+      mockUtilFunctions.getFrontEndOrigin.mockReturnValue(
+        'https://frontend.example.com',
+      );
+      mockUtilFunctions.getDataOrigin.mockReturnValue(
+        'https://backend.example.com',
+      );
 
       const response = await request(app)
         .get('/urls/test-domain.com')
@@ -860,9 +972,7 @@ describe('auth_routes', () => {
         throw new Error('Utility error');
       });
 
-      await request(app)
-        .get('/urls/example.com')
-        .expect(500); // Should return error when utility functions fail
+      await request(app).get('/urls/example.com').expect(500); // Should return error when utility functions fail
     });
   });
 
@@ -945,21 +1055,22 @@ describe('auth_routes', () => {
         // Expected due to headers already sent error
         expect((error as Error).message).toContain('Cannot set headers');
       }
-      
+
       // At least verify that isValidEmail was called
-      expect(mockUtilFunctions.isValidEmail).toHaveBeenCalledWith('invalid-email');
+      expect(mockUtilFunctions.isValidEmail).toHaveBeenCalledWith(
+        'invalid-email',
+      );
     });
 
     it.todo('should return 400 status for missing email');
     it('should handle missing email parameter', async () => {
       try {
-        await request(app)
-          .get('/loginwithemail');
+        await request(app).get('/loginwithemail');
       } catch (error) {
         // Expected due to headers already sent error
         expect((error as Error).message).toContain('Cannot set headers');
       }
-      
+
       // At least verify that isValidEmail was called
       expect(mockUtilFunctions.isValidEmail).toHaveBeenCalledWith(undefined);
     });
@@ -974,7 +1085,7 @@ describe('auth_routes', () => {
 
       expect(response.body).toMatchObject({
         success: true,
-        numSessionsThisWillLogOut: 0
+        numSessionsThisWillLogOut: 0,
       });
 
       expect(mockUtilFunctions.createAccessCode).toHaveBeenCalled();
@@ -987,11 +1098,13 @@ describe('auth_routes', () => {
         loginInfo: { email: 'user@example.com' },
         next: expect.any(Function),
       });
-      expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
-        toAddrs: 'user@example.com',
-        subject: expect.any(String),
-        body: expect.any(String),
-      }));
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          toAddrs: 'user@example.com',
+          subject: expect.any(String),
+          body: expect.any(String),
+        }),
+      );
       expect(mockLog).toHaveBeenCalledWith('Login code: 654321');
     });
 
@@ -1004,7 +1117,9 @@ describe('auth_routes', () => {
         .expect(200);
 
       expect(mockUtilFunctions.createAccessCode).toHaveBeenCalledTimes(2);
-      expect(mockUtilFunctions.getLoginInfoByAccessCode).toHaveBeenCalledTimes(2);
+      expect(mockUtilFunctions.getLoginInfoByAccessCode).toHaveBeenCalledTimes(
+        2,
+      );
       expect(mockLog).toHaveBeenCalledWith('Login code: UNIQUE123');
     });
 
@@ -1021,7 +1136,9 @@ describe('auth_routes', () => {
 
     it('should handle sessionStore JSON parse errors gracefully', async () => {
       setupFailureMocks.corruptedSessionData();
-      mockUtilFunctions.runQuery.mockResolvedValue([{ id: 1, deviceLoginLimit: 2 }]);
+      mockUtilFunctions.runQuery.mockResolvedValue([
+        { id: 1, deviceLoginLimit: 2 },
+      ]);
 
       const response = await request(app)
         .get('/loginwithemail')
@@ -1032,11 +1149,15 @@ describe('auth_routes', () => {
     });
 
     it('should handle sessionStore errors during device limit check', async () => {
-      mockUtilFunctions.runQuery.mockResolvedValue([{ id: 1, deviceLoginLimit: 2 }]);
-      mockUtilFunctions.sessionStore.get.mockImplementation((_id: string, callback: (err: Error | null) => void) => {
-        // Don't throw, just resolve with error to test graceful handling
-        callback(null);
-      });
+      mockUtilFunctions.runQuery.mockResolvedValue([
+        { id: 1, deviceLoginLimit: 2 },
+      ]);
+      mockUtilFunctions.sessionStore.get.mockImplementation(
+        (_id: string, callback: (err: Error | null) => void) => {
+          // Don't throw, just resolve with error to test graceful handling
+          callback(null);
+        },
+      );
 
       const response = await request(app)
         .get('/loginwithemail')
@@ -1055,18 +1176,19 @@ describe('auth_routes', () => {
       expect(mockI18n).toHaveBeenCalledWith(
         expect.stringContaining('Login code:'),
         { code: '123456' },
-        { locale: 'en' }
+        { locale: 'en' },
       );
       expect(mockLog).toHaveBeenCalledWith('Authenticate user via email', 2);
     });
-
   });
 
   // ===== CREATE ACCESS CODE TESTS =====
   describe('POST /createaccesscode', () => {
     it('should return 403 when user is not admin', async () => {
       const mockUser = createMockUser({ isAdmin: false });
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
 
       await request(app)
         .post('/createaccesscode')
@@ -1074,7 +1196,10 @@ describe('auth_routes', () => {
         .expect(403)
         .expect({ errorType: 'no_permission' });
 
-      expect(mockLog).toHaveBeenCalledWith('No permission to create access code', 3);
+      expect(mockLog).toHaveBeenCalledWith(
+        'No permission to create access code',
+        3,
+      );
     });
 
     it('should return 401 when user is not authenticated', async () => {
@@ -1088,7 +1213,9 @@ describe('auth_routes', () => {
 
     it('should create access code when admin user provides valid email', async () => {
       const mockUser = createMockAdminUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
       mockUtilFunctions.createAccessCode.mockReturnValue('ADMIN123');
 
       await request(app)
@@ -1113,8 +1240,10 @@ describe('auth_routes', () => {
     it.todo('should return 400 status for invalid email');
     it('should return error for invalid email', async () => {
       const mockUser = createMockAdminUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
-      
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
+
       try {
         await request(app)
           .post('/createaccesscode')
@@ -1123,29 +1252,33 @@ describe('auth_routes', () => {
         // Expected due to headers already sent error
         expect((error as Error).message).toContain('Cannot set headers');
       }
-      
-      expect(mockUtilFunctions.isValidEmail).toHaveBeenCalledWith('invalid-email');
+
+      expect(mockUtilFunctions.isValidEmail).toHaveBeenCalledWith(
+        'invalid-email',
+      );
     });
     it.todo('should return 400 status for missing email');
     it('should handle missing email in request body', async () => {
       const mockUser = createMockAdminUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
-      
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
+
       try {
-        await request(app)
-          .post('/createaccesscode')
-          .send({});
+        await request(app).post('/createaccesscode').send({});
       } catch (error) {
-        // Expected due to headers already sent error  
+        // Expected due to headers already sent error
         expect((error as Error).message).toContain('Cannot set headers');
       }
-      
+
       expect(mockUtilFunctions.isValidEmail).toHaveBeenCalledWith(undefined);
     });
 
     it('should ensure access code uniqueness', async () => {
       const mockUser = createMockAdminUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
       setupFailureMocks.duplicateAccessCode();
 
       await request(app)
@@ -1155,13 +1288,17 @@ describe('auth_routes', () => {
         .expect({ accessCode: 'UNIQUE123' });
 
       expect(mockUtilFunctions.createAccessCode).toHaveBeenCalledTimes(2);
-      expect(mockUtilFunctions.getLoginInfoByAccessCode).toHaveBeenCalledTimes(2);
+      expect(mockUtilFunctions.getLoginInfoByAccessCode).toHaveBeenCalledTimes(
+        2,
+      );
     });
 
     it('should handle excessive duplicate access code generation attempts', async () => {
       const mockUser = createMockAdminUser();
-      mockEnsureAuthenticated.mockImplementation(setupAuthenticatedRequest(mockUser));
-      
+      mockEnsureAuthenticated.mockImplementation(
+        setupAuthenticatedRequest(mockUser),
+      );
+
       // Simulate a few duplicate codes before success
       let callCount = 0;
       mockUtilFunctions.getLoginInfoByAccessCode.mockImplementation(() => {
@@ -1171,7 +1308,7 @@ describe('auth_routes', () => {
         }
         return Promise.resolve(null);
       });
-      
+
       let codeCallCount = 0;
       mockUtilFunctions.createAccessCode.mockImplementation(() => {
         codeCallCount++;
@@ -1190,12 +1327,22 @@ describe('auth_routes', () => {
   describe('GET /loginwithaccesscode', () => {
     beforeEach(() => {
       // Setup default successful login scenario
-      mockUtilFunctions.getLoginInfoByAccessCode.mockResolvedValue({ email: 'user@example.com' });
-      mockUtilFunctions.updateUserInfo.mockResolvedValue(createMockUser());
-      mockLogIn.mockImplementation(({ req, next }: { req: RequestWithUser; next: (err?: Error) => void }) => {
-        req.user = createMockUser();
-        next();
+      mockUtilFunctions.getLoginInfoByAccessCode.mockResolvedValue({
+        email: 'user@example.com',
       });
+      mockUtilFunctions.updateUserInfo.mockResolvedValue(createMockUser());
+      mockLogIn.mockImplementation(
+        ({
+          req,
+          next,
+        }: {
+          req: RequestWithUser;
+          next: (err?: Error) => void;
+        }) => {
+          req.user = createMockUser();
+          next();
+        },
+      );
     });
 
     it('should successfully login with valid access code', async () => {
@@ -1217,7 +1364,10 @@ describe('auth_routes', () => {
       expect(response.body).toHaveProperty('currentServerTime');
       expect(response.body).toHaveProperty('cookie');
 
-      expect(mockLog).toHaveBeenCalledWith('Authenticate user via email: sent access code: VALID123', 2);
+      expect(mockLog).toHaveBeenCalledWith(
+        'Authenticate user via email: sent access code: VALID123',
+        2,
+      );
       expect(mockUtilFunctions.getLoginInfoByAccessCode).toHaveBeenCalledWith({
         accessCode: 'VALID123',
         destroyAfterGet: true,
@@ -1239,12 +1389,24 @@ describe('auth_routes', () => {
     });
 
     it('should handle IDP with userInfoEndpoint', async () => {
-      mockUtilFunctions.runQuery.mockResolvedValue([{ user_id_from_idp: 'external123' }]);
+      mockUtilFunctions.runQuery.mockResolvedValue([
+        { user_id_from_idp: 'external123' },
+      ]);
       mockUtilFunctions.getUserInfo.mockResolvedValue(createMockUser());
-      
-      global.connection.query.mockImplementation((_query: string, _params: unknown, callback: (err: Error | null, results: unknown[]) => void) => {
-        callback(null, [createMockIDP({ userInfoEndpoint: 'https://idp.example.com/userinfo' })]);
-      });
+
+      global.connection.query.mockImplementation(
+        (
+          _query: string,
+          _params: unknown,
+          callback: (err: Error | null, results: unknown[]) => void,
+        ) => {
+          callback(null, [
+            createMockIDP({
+              userInfoEndpoint: 'https://idp.example.com/userinfo',
+            }),
+          ]);
+        },
+      );
 
       const response = await request(app)
         .get('/loginwithaccesscode')
@@ -1267,10 +1429,20 @@ describe('auth_routes', () => {
     it('should handle user with no existing user_id_from_idp', async () => {
       mockUtilFunctions.runQuery.mockResolvedValue([]);
       mockUtilFunctions.getUserInfo.mockResolvedValue(createMockUser());
-      
-      global.connection.query.mockImplementation((_query: string, _params: unknown, callback: (err: Error | null, results: unknown[]) => void) => {
-        callback(null, [createMockIDP({ userInfoEndpoint: 'https://idp.example.com/userinfo' })]);
-      });
+
+      global.connection.query.mockImplementation(
+        (
+          _query: string,
+          _params: unknown,
+          callback: (err: Error | null, results: unknown[]) => void,
+        ) => {
+          callback(null, [
+            createMockIDP({
+              userInfoEndpoint: 'https://idp.example.com/userinfo',
+            }),
+          ]);
+        },
+      );
 
       await request(app)
         .get('/loginwithaccesscode')
@@ -1299,9 +1471,11 @@ describe('auth_routes', () => {
     });
 
     it('should handle login errors', async () => {
-      mockLogIn.mockImplementation(({ next }: { next: (err?: Error) => void }) => {
-        next(new Error('Login failed'));
-      });
+      mockLogIn.mockImplementation(
+        ({ next }: { next: (err?: Error) => void }) => {
+          next(new Error('Login failed'));
+        },
+      );
 
       await request(app)
         .get('/loginwithaccesscode')
@@ -1310,9 +1484,15 @@ describe('auth_routes', () => {
     });
 
     it('should handle device login limit during login', async () => {
-      global.connection.query.mockImplementation((_query: string, _params: unknown, callback: (err: Error | null, results: unknown[]) => void) => {
-        callback(null, [createMockIDP({ deviceLoginLimit: 2 })]);
-      });
+      global.connection.query.mockImplementation(
+        (
+          _query: string,
+          _params: unknown,
+          callback: (err: Error | null, results: unknown[]) => void,
+        ) => {
+          callback(null, [createMockIDP({ deviceLoginLimit: 2 })]);
+        },
+      );
 
       const response = await request(app)
         .get('/loginwithaccesscode')
@@ -1320,28 +1500,32 @@ describe('auth_routes', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(mockLogIn).toHaveBeenCalledWith(expect.objectContaining({
-        deviceLoginLimit: 2,
-      }));
+      expect(mockLogIn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          deviceLoginLimit: 2,
+        }),
+      );
     });
 
     it('should handle missing code parameter', async () => {
       // Reset the getLoginInfoByAccessCode to return null for undefined code
       mockUtilFunctions.getLoginInfoByAccessCode.mockResolvedValue(null);
-      
-      await request(app)
-        .get('/loginwithaccesscode')
-        .expect(200)
-        .expect({
-          success: false,
-          error: 'invalid access code',
-        });
 
-      expect(mockLog).toHaveBeenCalledWith('Authenticate user via email: sent access code: undefined', 2);
+      await request(app).get('/loginwithaccesscode').expect(200).expect({
+        success: false,
+        error: 'invalid access code',
+      });
+
+      expect(mockLog).toHaveBeenCalledWith(
+        'Authenticate user via email: sent access code: undefined',
+        2,
+      );
     });
 
     it('should handle malformed login info from access code', async () => {
-      mockUtilFunctions.getLoginInfoByAccessCode.mockResolvedValue({ invalidData: true });
+      mockUtilFunctions.getLoginInfoByAccessCode.mockResolvedValue({
+        invalidData: true,
+      });
 
       await request(app)
         .get('/loginwithaccesscode')
@@ -1352,6 +1536,5 @@ describe('auth_routes', () => {
           error: 'invalid access code',
         });
     });
-
   });
 });

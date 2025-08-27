@@ -24,9 +24,9 @@
 
 # Development
 
-   ```bash
-   npm start
-   ```
+```bash
+npm start
+```
 
 # Running Tests
 
@@ -43,6 +43,7 @@
   ```bash
   npm test -- auth_routes
   ```
+
   `npm run push-to-aws`
 
 - Watch mode:
@@ -51,14 +52,6 @@
   npm test -- --watch
   ```
 
-## Test Types
-
-- ✅ Route tests (e.g., `auth_routes.test.ts`, `user_routes.test.ts`)
-- ✅ Integration tests in `__tests__/integration/`
-- ✅ Unit tests in `__tests__/utils/`
-- ✅ CI/CD compatible
-- ✅ Type-safe, isolated test environments
-
 ## Notes
 
 - Make sure your `.env` files are correctly populated.
@@ -66,9 +59,10 @@
 - All global states should be reset between tests to prevent cross-contamination.
 
 # Updating Staging
-   ```bash
-   npm run push-to-aws
-   ```
+
+```bash
+npm run push-to-aws
+```
 
 # Demo
 
