@@ -10,6 +10,7 @@ const session = require('express-session')
 const MySQLStore = require('express-mysql-session')(session)
 const mysql = require('mysql')
 const SqlString = require('mysql/lib/protocol/SqlString')
+const { log } = require('./logger')
 
 const getShopifyUserInfo = require('./getShopifyUserInfo')
 
@@ -134,7 +135,7 @@ const jsonCols = {
 
 const openConnection = () => {
 
-  console.log(`Establish connection pool`)
+  log([`Establish connection pool`])
 
   global.connection = mysql.createPool({
     host: process.env.OVERRIDE_DATABASE_HOSTNAME || process.env.DATABASE_HOSTNAME,
@@ -169,7 +170,7 @@ const openConnection = () => {
   // should only actually fire if the lambda instance persists over an hour.)
   // See https://stackoverflow.com/questions/70645884/error-packets-out-of-order-got-0-expected-3
   setTimeout(() => {
-    console.log(`Close connection pool`)
+    log([`Close connection pool`])
     global.connection.end()
     delete global.connection
   }, 1000 * 60 * 60)
@@ -310,17 +311,18 @@ const util = {
   // The next two functions are used for public canonical links. Eg. for share pages, xapi statements, and LTI launch links.
   // (getFrontendBaseUrl does not (and should not) get a beta base url.)
   // (For other things, use getDataOrigin and getFrontEndOrigin.)
-  getBackendBaseUrl: req => `${util.getProtocol({ req })}://${req.headers.host}`,
+  getBackendBaseUrl: req => `${util.getProtocol({ req })}://${req.hostname || req.headers.host}`,
   getFrontendBaseUrl: req => {
+    const host = req.hostname || req.headers.host
     // getFrontendBaseUrl used to return 'https://null' for dev
-    if (req.headers.host.includes('localhost')) {
+    if (host.includes('localhost')) {
       return util.getFrontEndOrigin({ req, env: 'dev' })
     }
 
-    if(req.headers.host.split('.')[1] === 'stg') {
+    if (host.split('.')[1] === 'stg') {
       return util.getFrontEndOrigin({ req, env: 'staging' })
     } else {
-      return `${util.getProtocol({ req })}://${util.getIDPDomain(req)}`
+      return `${util.getProtocol({ req })}://${util.getIDPDomain({ host })}`
     }
   },
 
@@ -382,15 +384,21 @@ const util = {
       return `${process.env.DEV_NETWORK_IP || `localhost`}:8080`
     }
 
-    if(env ? env === 'staging' : (process.env.IS_STAGING === `true`)) {
-      // staging environment
-      return `data.stg.${domain}`
+    // Check IPv4 address
+    if (domain.match(/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/)) {
+      return domain
     }
 
-    // production or beta environment
+    // Check IPv6 address
+    if (domain.match(/^\[(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}\]$/)) {
+      return domain
+    }
+
+    // beta, production or staging environment
     return `data.${domain}`
   },
 
+  // TODO remove old
   // old param is temporary
   getDataOrigin: ({ domain, protocol=`https`, env, old }={}) => (
     `${
@@ -401,27 +409,51 @@ const util = {
   ),
 
   getIDPDomain: ({ host, env }) => {
+    // Handle undefined host and quotes domain, where both won't match idp table entries
+    if (!host || host === process.env.QUOTES_DOMAIN) {
+      return host || ""
+    }
+
     if(env ? env === 'dev' : process.env.IS_DEV) {
       return `${process.env.DEV_NETWORK_IP || `localhost`}:19006`
     }
 
-    if(env ? env === 'staging' : (process.env.IS_STAGING === `true`)) {
-      return host.slice("data.stg.".length)
+    if (host === 'localhost' && process.env.DEFAULT_IDP_DOMAIN) {
+      return process.env.DEFAULT_IDP_DOMAIN
     }
 
+    // Check IPv4 address
+    if (host.match(/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/)) {
+      // Check whether host is internal to the network, normally an internal health check
+      if (process.env.DEFAULT_IDP_DOMAIN && process.env.IPV4_INTERNAL_NETWORK_REGEX && (host.match(new RegExp(process.env.IPV4_INTERNAL_NETWORK_REGEX)) || host === '127.0.0.1')) {
+        return process.env.DEFAULT_IDP_DOMAIN
+      } else {
+        return host
+      }
+    }
+
+    // Check IPv6 address
+    if (host.match(/^\[(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}\]$/)) {
+      // Check whether host is internal to the network, normally an internal health check
+      if (process.env.DEFAULT_IDP_DOMAIN && process.env.IPV6_INTERNAL_NETWORK_REGEX && (host.match(new RegExp(process.env.IPV6_INTERNAL_NETWORK_REGEX)) || host === '::1')) {
+        return process.env.DEFAULT_IDP_DOMAIN
+      } else {
+        return host
+      }
+    }
+
+    // beta, production or staging environment
     return host.slice("data.".length)
   },
 
   getFrontEndOrigin: ({ req, env }) => {
-    let domain = util.getIDPDomain({ host: req.headers.host, env })
+    let domain = util.getIDPDomain({ host: req.hostname || req.headers.host, env })
 
     if(env ? env === 'dev' : process.env.IS_DEV) {
       domain = `${process.env.DEV_NETWORK_IP || `localhost`}:19006`
     }
 
-    if(env ? env === 'staging' : (process.env.IS_STAGING === `true`)) {
-      domain = `stg.${domain}`
-    }
+    // staging domain doesn't need to be manipulated
 
     const betaUrlMatch = (req.headers.referer || "").match(/^https?:\/\/(beta\.[^\/]*)(\/|$)/)
     if(env ? env === 'beta' : (betaUrlMatch || req.query.isBeta)) {
@@ -522,7 +554,7 @@ const util = {
     const connectorCharacter = /\?/.test(idp.userInfoEndpoint) ? `&` : `?`
     let response, jwtStr
     const url = `${idp.userInfoEndpoint}${connectorCharacter}version=${API_VERSION}&payload=${payload}`
-    log([`URL being sent to userInfoEndpoint...`, url], 3)
+    log([`URL being sent to userInfoEndpoint...`, url], 1)
 
     try {
 
@@ -1357,7 +1389,7 @@ const util = {
         }
       )
 
-      // console.log('runQuery SQL: ', sql)
+      // log(['runQuery SQL: ', sql])
     })
   ),
 
@@ -1366,13 +1398,13 @@ const util = {
     const [ idpRow ] = await util.runQuery({
       query: `SELECT id, ${jwtColInIdp} FROM idp WHERE domain=:domain`,
       vars: {
-        domain: util.getIDPDomain(req.headers),
+        domain: util.getIDPDomain({ host: req.hostname || req.headers.host }),
       },
       next,
     })
 
     if(!idpRow) {
-      log(["Invalid host.", req.headers.host], 3)
+      log(["Invalid host.", req.hostname || req.headers.host], 3)
       return res.status(403).send({ success: false })
     }
 
@@ -1380,7 +1412,7 @@ const util = {
       req.idpId = parseInt(idpRow.id, 10)
       req.payload_decoded = jwt.verify(req.params.payload || req.body.payload, idpRow[jwtColInIdp])
     } catch(err) {
-      log(["Invalid payload.", req.headers.host, req.params.payload || req.body.payload, req.body, jwtColInIdp, err], 3)
+      log(["Invalid payload.", req.hostname || req.headers.host, req.params.payload || req.body.payload, req.body, jwtColInIdp, err], 3)
       if(!ignoreError) {
         return res.status(403).send({ success: false })
       }
@@ -1399,12 +1431,12 @@ const util = {
 
     global.connection.query(
       'SELECT language FROM `idp` WHERE domain=?',
-      [util.getIDPDomain(req.headers)],
+      [util.getIDPDomain({ host: req.hostname || req.headers.host })],
       (err, rows) => {
         if (err) return next(err)
   
         if(rows.length !== 1) {
-          log(["Request came from invalid host.", req.headers.host], 3)
+          log(["Request came from invalid host.", req.hostname || req.headers.host], 3)
           return res.status(403).send({ success: false })
         }
   

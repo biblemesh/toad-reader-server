@@ -1,5 +1,6 @@
 const parseEpub = require('./parseEpub')
 const { getIndexedBook } = require('./indexEpub')
+const { log } = require('./logger')
 const { runQuery, getFromS3, convertJsonColsToStrings } = require('./util')
 const mime = require('mime')
 

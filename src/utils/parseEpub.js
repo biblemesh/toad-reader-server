@@ -3,6 +3,7 @@
 const fs = require('fs')
 const { parseString } = require('xml2js')
 
+const { log } = require('./logger')
 const { getFromS3 } = require("./util")
 
 const normalizePath = path => {

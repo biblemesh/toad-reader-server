@@ -18,21 +18,13 @@ const { i18nSetup } = require("inline-i18n")
 const fs = require('fs')
 const sendEmail = require('./src/utils/sendEmail')
 require("array-flat-polyfill")  // Array.flat function
+const { log } = require('./src/utils/logger.js');
 
 ////////////// SETUP SERVER //////////////
 
 const port = parseInt(process.env.PORT, 10) || process.env.PORT || 8080
 app.set('port', port)
 const server = http.createServer(app)
-const log = function(msgs, importanceLevel) {
-  const logLevel = parseInt(process.env.LOGLEVEL) || 3   // 1=verbose, 2=important, 3=errors only
-  importanceLevel = importanceLevel || 1
-  if(importanceLevel >= logLevel) {
-    if(!Array.isArray(msgs)) msgs = [msgs]
-    msgs.unshift(['LOG ','INFO','ERR '][importanceLevel - 1])
-    console.log.apply(this, msgs)
-  }
-}
 
 const sessionParser = util.session({
   store: util.sessionStore,
@@ -47,7 +39,7 @@ const sessionParser = util.session({
     // if they use this session at least once/3 months, it will never expire
   },
 })
-// console.log('ENV >>> ', process.env)
+// log(['ENV >>> ', process.env])
 
 
 ////////////// WAIT FOR INITIAL SETUP //////////////
@@ -228,7 +220,7 @@ passport.deserializeUser((partialUser, done) => {
 })
 
 // app.use((req, res, next) => {
-//   console.log('req >>>>>', req.originalUrl, req.path, req.headers, req.query, req.body)
+//   log(['req >>>>>', req.originalUrl, req.path, req.headers, req.query, req.body])
 //   next()
 // })
 
@@ -483,12 +475,13 @@ const ensureAuthenticated = async (req, res, next) => {
   })
 
   if(req.headers['x-tenant-auth']) {
-    log(['x-tenant-auth header found', req.headers['x-tenant-auth'], util.getIDPDomain(req.headers)])
+    const idpDomain = util.getIDPDomain({ host: req.hostname || req.headers.host })
+    log(['x-tenant-auth header found', req.headers['x-tenant-auth'], idpDomain])
 
     const [ row={} ] = await util.runQuery({
       query: 'SELECT *, id AS idp_id FROM idp WHERE domain=:domain',
       vars: {
-        domain: util.getIDPDomain(req.headers),
+        domain: idpDomain,
       },
       next,
     })
@@ -550,25 +543,25 @@ const ensureAuthenticated = async (req, res, next) => {
     
     log('Checking if IDP requires authentication')
     global.connection.query('SELECT * FROM `idp` WHERE domain=?',
-      [util.getIDPDomain(req.headers)],
+      [util.getIDPDomain({ host: req.hostname || req.headers.host })],
       function (err, rows) {
         if (err) return next(err)
         const idp = rows[0]
 
         if(!idp) {
-          log('Tenant not found: ' + req.headers.host, 2)
+          log(['Tenant not found: ', req.hostname || req.headers.host], 2)
           
           // Debug mode: return detailed JSON response for debugging
           if(process.env.DEBUG === 'true') {
             return res.status(404).json({
-              error: `Tenant not found: ${req.headers.host}`,
-              expectedIdpDomain: util.getIDPDomain(req.headers),
+              error: `Tenant not found: ${req.hostname || req.headers.host}`,
+              expectedIdpDomain: util.getIDPDomain({ host: req.hostname || req.headers.host }),
               failedQuery: "SELECT * FROM `idp` WHERE domain=?"
             })
           }
           
           // Production/staging: redirect to marketing URL
-          return res.redirect('https://' + process.env.MARKETING_URL + '?tenant_not_found=1')
+          return res.redirect('https://' + process.env.MARKETING_DOMAIN + '?tenant_not_found=1')
 
         } else {
 
@@ -577,7 +570,7 @@ const ensureAuthenticated = async (req, res, next) => {
           const expiresAt = idp.demo_expires_at && util.mySQLDatetimeToTimestamp(idp.demo_expires_at)
           if(expiresAt && expiresAt < util.getUTCTimeStamp()) {
             log(['IDP no longer exists (#2)', idpId], 2)
-            return res.redirect('https://' + process.env.MARKETING_URL + '?domain_expired=1')
+            return res.redirect('https://' + process.env.MARKETING_DOMAIN + '?domain_expired=1')
 
           } else {
 
@@ -739,7 +732,7 @@ server.listen(port)
 if(!!process.env.IS_DEV) {
   app.listen(port, (err) => {
     if (err) throw err
-    console.log('> Ready on http://localhost:8081')
+    log(['> Ready on http://localhost:8081'])
   })
 }
 
