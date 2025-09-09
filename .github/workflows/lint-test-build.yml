@@ -3,6 +3,10 @@ name: Lint / Test / Build
 on:
   pull_request:
 
+  push:
+    branches:
+      - bm-develop
+
 
 env:
   DEFAULT_NODE_VERSION: 16.x
@@ -86,6 +90,7 @@ jobs:
             ghcr.io/${{ github.repository }}
             #${{ github.repository }}
           tags: |
+            type=edge,branch=bm-develop
             type=ref,event=branch
             type=ref,event=pr
             type=sha
