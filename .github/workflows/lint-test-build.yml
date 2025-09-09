@@ -50,13 +50,6 @@ jobs:
       - run: npm ci
         if: steps.cache.outputs.cache-hit != 'true'
 
-      - name: Set up QEMU
-        if: matrix.action == 'build'
-        id: qemu
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: amd64,arm64
-
       - name: Set up Docker Buildx
         id: buildx
         if: matrix.action == 'build'
