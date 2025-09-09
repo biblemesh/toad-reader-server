@@ -1,3 +1,4 @@
+const { log } = require('../utils/logger')
 /* global requireRouter */
 
 module.exports = function (
@@ -32,7 +33,7 @@ module.exports = function (
   //         if(rows.length == 0) {
   //           log(['IDP no longer exists', req.user.idpId], 2);
   //           if(redirectOnExpire) {
-  //             return res.redirect('https://' + process.env.MARKETING_URL + '?domain_expired=1');
+  //             return res.redirect('https://' + process.env.MARKETING_DOMAIN + '?domain_expired=1');
   //           } else {
   //             return res.status(403).send({ errorType: "no_idp" });
   //           }
@@ -110,7 +111,7 @@ module.exports = function (
     // params.Expires = 60
     // var url = s3.getSignedUrl('getObject', params, function(err, url) {
     //   if(err) {
-    //     console.log('S3 getSignedUrl error on ' + params.Key, err);
+    //     log('S3 getSignedUrl error on ' + params.Key, err);
     //     res.status(404).send({ error: 'Not found' });
     //   } else {
     //     res.redirect(307, url);
@@ -227,7 +228,7 @@ module.exports = function (
     } else {
       global.connection.query(
         'SELECT id FROM `idp` WHERE domain=?',
-        [util.getIDPDomain(req.headers)],
+        [util.getIDPDomain({ host: req.hostname || req.headers.host })],
         function (err, rows) {
           if (err) return next(err);
 

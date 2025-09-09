@@ -5,6 +5,7 @@ const AWS = require('aws-sdk')
 const crypto = require('crypto')
 const fetch = require('node-fetch')
 const jwt = require('jsonwebtoken')
+const { log } = require('../utils/logger')
 
 const util = require('../utils/util')
 const sendEmail = require("../utils/sendEmail")
@@ -724,7 +725,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
       const [ idp={} ] = await util.runQuery({
         query: 'SELECT * FROM idp WHERE domain=:domain',
         vars: {
-          domain: util.getIDPDomain(req.headers),
+          domain: util.getIDPDomain({ host: req.hostname || req.headers.host }),
         },
         next,
       })
@@ -827,7 +828,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
     const [ idp ] = await util.runQuery({
       query: 'SELECT * FROM idp WHERE domain=:domain',
       vars: {
-        domain: util.getIDPDomain(req.headers),
+        domain: util.getIDPDomain({ host: req.hostname || req.headers.host }),
       },
       next,
     })

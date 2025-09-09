@@ -1,3 +1,4 @@
+const { log } = require('../utils/logger')
 const util = require('../utils/util')
 const patchLatestLocation = require('./patch_keys/patch_latest_location')
 const patchHighlights = require('./patch_keys/patch_highlights')
