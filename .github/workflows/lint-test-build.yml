@@ -57,21 +57,6 @@ jobs:
         with:
           install: true
 
-      - name: Cache Docker layers
-        id: cache-docker
-        if: steps.buildx.outcome == 'success'
-        uses: actions/cache@v4
-        with:
-          path: ${{ runner.temp }}/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ matrix.node-version }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-${{ matrix.node-version }}-
-
-      - name: Docker cache size fix
-        if: steps.cache-docker.outcome == 'success'
-        run: |
-          mv -v ${{ runner.temp }}/.buildx-cache ${{ runner.temp }}/.buildx-cache-old || true
-
       - name: Docker meta
         if: steps.buildx.outcome == 'success'
         id: meta
@@ -97,14 +82,15 @@ jobs:
           echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '"DATETIMENOW=" + (.labels."org.opencontainers.image.created")' >> $GITHUB_ENV
           #scope="buildx-${{ matrix.node-version }}-"
           #echo CACHE_ARGS="--cache-from=type=gha,scope=$scope --cache-to=type=gha,scope=$scope,mode=max" >> $GITHUB_ENV
-          cachesrc="${{ runner.temp }}/.buildx-cache"
-          echo CACHE_ARGS="--cache-from=type=local,src=$cachesrc-old --cache-to=type=local,dest=$cachesrc,mode=max" >> $GITHUB_ENV
+          echo CACHE_ARGS="--cache-from=type=gha --cache-to=type=gha,mode=max" >> $GITHUB_ENV
           echo EXTRA_ARGS=--platform linux/amd64,linux/arm64 --push >> $GITHUB_ENV
 
-      # FIXME this is disabled because we only have permission to run 'verified' actions
-      # instead we must use the local cache, which needs to be manually cleared from time to time
-      #- uses: peaceiris/actions-export-envs@v1.1.0
-        #id: envs
+      - uses: actions/github-script@v6
+        id: envs
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env['ACTIONS_CACHE_URL'])
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env['ACTIONS_RUNTIME_TOKEN'])
 
       - name: Login to GitHub Container Registry
         if: matrix.action == 'build'
@@ -122,5 +108,5 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           BASE_BRANCH: ${{ github.base_ref || 'bm-develop' }}
           NODE_VERSION: ${{ matrix.node-version }}
-          #ACTIONS_RUNTIME_TOKEN: ${{ steps.envs.outputs.ACTIONS_RUNTIME_TOKEN }}
-          #ACTIONS_CACHE_URL: ${{ steps.envs.outputs.ACTIONS_CACHE_URL }}
+          ACTIONS_RUNTIME_TOKEN: ${{ steps.envs.outputs.ACTIONS_RUNTIME_TOKEN }}
+          ACTIONS_CACHE_URL: ${{ steps.envs.outputs.ACTIONS_CACHE_URL }}
