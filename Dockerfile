@@ -25,7 +25,7 @@ RUN (jq '.version = "1.0.0"' | jq '.packages."".version = "1.0.0"') < package-lo
 # Builder image #
 #################
 
-FROM bitnamilegacy/node:${NODE_VERSION} AS builder
+FROM node:${NODE_VERSION}-slim AS builder
 
 WORKDIR /app
 
