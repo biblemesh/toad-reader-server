@@ -30,7 +30,7 @@
     "*.+(json|css|md|scss)": [
       "prettier --write"
     ],
-    "*.+(js|jsx|ts|tsx)": [
+    "*.+(js|jsx|ts|tsx|mjs)": [
       "eslint --fix",
       "prettier --write"
     ],
