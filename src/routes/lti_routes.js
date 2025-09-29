@@ -3,6 +3,7 @@ const { i18n } = require("inline-i18n")
 const Entities = require('html-entities').AllHtmlEntities
 const entities = new Entities()
 const jwt = require('jsonwebtoken')
+const { log } = require('../utils/logger')
 const oauthSignature = require('oauth-signature')
 
 module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {

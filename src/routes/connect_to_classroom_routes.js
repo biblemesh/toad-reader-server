@@ -1,3 +1,4 @@
+const { log } = require('../utils/logger')
 const util = require('../utils/util');
 
 module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {

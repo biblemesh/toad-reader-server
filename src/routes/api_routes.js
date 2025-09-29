@@ -1,3 +1,4 @@
+const { log } = require('../utils/logger')
 const getShopifyUserInfo = require('../utils/getShopifyUserInfo')
 var util = require('../utils/util')
 
@@ -26,7 +27,7 @@ module.exports = function (app, log) {
       const [ idp={} ] = await util.runQuery({
         query: `SELECT * FROM idp WHERE domain=:domain`,
         vars: {
-          domain: util.getIDPDomain(req.headers),
+          domain: util.getIDPDomain({ host: req.hostname || req.headers.host }),
         },
         next,
       })

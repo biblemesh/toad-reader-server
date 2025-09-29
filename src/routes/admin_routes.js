@@ -3,6 +3,7 @@ const multiparty = require('multiparty')
 const admzip = require('adm-zip')
 const Jimp = require("jimp")
 const fetch = require('node-fetch')
+const { log } = require('../utils/logger')
 const mime = require('mime')
 const uuidv4 = require('uuid/v4')
 const mm = require('music-metadata')
@@ -205,7 +206,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
         if(
           req.tenantAuthInfo
           && (req.tenantAuthInfo || {}).action !== 'importbook'
-          && (req.tenantAuthInfo || {}).domain !== util.getIDPDomain(req.headers)
+          && (req.tenantAuthInfo || {}).domain !== util.getIDPDomain({ host: req.hostname || req.headers.host })
         ) {
           throw new Error(`invalid_tenant_auth`)
         }
@@ -786,7 +787,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
         ORDER BY s.label
       `,
       vars: {
-        domain: util.getIDPDomain(req.headers),  // they may not be logged in, and so we find this by domain and not idpId
+        domain: util.getIDPDomain({ host: req.hostname || req.headers.host }),  // they may not be logged in, and so we find this by domain and not idpId
       },
       next,
     })
@@ -1211,7 +1212,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
         ORDER BY mk.ordering
       `,
       vars: {
-        domain: util.getIDPDomain(req.headers),  // they may not be logged in, and so we find this by domain and not idpId
+        domain: util.getIDPDomain({ host: req.hostname || req.headers.host }),  // they may not be logged in, and so we find this by domain and not idpId
       },
       next,
     })

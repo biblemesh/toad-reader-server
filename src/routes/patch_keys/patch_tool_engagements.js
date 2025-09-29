@@ -1,3 +1,4 @@
+const { log } = require('../../utils/logger')
 const util = require('../../utils/util')
 const uuidv4 = require('uuid/v4')
 
@@ -108,7 +109,7 @@ module.exports = {
         }
 
         if([ 'QUESTION', 'POLL', 'SKETCH' ].includes(toolType) && !toolUidsForToolEngagementsWithoutUids.includes(tool_uid)) {
-          console.log(`ERR Allowed: invalid data: cannot patch engagement for toolType ${toolType} with uid ${uid}`)
+          log([`ERR Allowed: invalid data: cannot patch engagement for toolType ${toolType} with uid ${uid}`], 3)
           // parseError = `invalid data: cannot patch engagement for toolType ${toolType} with uid ${uid}`
           return false
         }
@@ -174,7 +175,7 @@ module.exports = {
           }
 
           if(dbToolEngagement && !toolEngagement._delete) {
-            console.log('ERR Allowed: invalid data: cannot update a submission toolType (i.e. identified by a uid)', req.headers['user-agent'], req.headers['x-platform'])
+            log(['ERR Allowed: invalid data: cannot update a submission toolType (i.e. identified by a uid)', req.headers['user-agent'], req.headers['x-platform']], 3)
             continue
             // return getErrorObj('invalid data: cannot update a submission toolType (i.e. identified by a uid)')
           }
@@ -199,7 +200,7 @@ module.exports = {
           !Number.isInteger(answer)
           || answer < 0
         ))) {
-          console.log('ERR Allowed: invalid data: tool engagement answers must be an array of whole numbers', req.headers['user-agent'], req.headers['x-platform'])
+          log(['ERR Allowed: invalid data: tool engagement answers must be an array of whole numbers', req.headers['user-agent'], req.headers['x-platform']], 3)
           toolEngagement.answers = toolEngagement.answers.map(answer => (
             (
               !Number.isInteger(answer)

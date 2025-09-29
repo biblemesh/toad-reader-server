@@ -1,12 +1,13 @@
 require('dotenv').config()
 
+const { log } = require('./src/utils/logger')
 const util = require('./src/utils/util')
 const dueDateReminders = require('./crons/due_date_reminders')
 // const xapiPosts = require('./crons/xapi_posts')
 
 const next = err => {
   if(err) {
-    console.log(`ERROR`, err)
+    log(err, 3)
   }
 }
 

@@ -3,6 +3,7 @@ const { shopifyApi } = require('@shopify/shopify-api')
 // const { shopifyApi, LATEST_API_VERSION, Session } = require('@shopify/shopify-api')
 const { restResources } = require("@shopify/shopify-api/rest/admin/2023-01")
 const fetch = require('node-fetch')
+const { log } = require('./logger')
 
 let currentNumberOfWaitingShopifyRequests = 0
 
@@ -83,7 +84,7 @@ const getShopifyUserInfo = async ({ email, idp, log, waitToExecuteIfNecessary })
               },
             })
           ))
-          console.log('metafields', metafields)
+          log(['metafields', metafields])
           const { value } = metafields.find(({ key, namespace }) => (namespace === `custom` && key === `toad_reader_info`)) || {}
           customerMetafieldLines = `customer:\n${JSON.parse(value).join(`\n`)}`
           processedAtTimeById[`customer:`] = 1
@@ -198,7 +199,7 @@ const getShopifyUserInfo = async ({ email, idp, log, waitToExecuteIfNecessary })
     userInfo.books = books
     userInfo.subscriptions = subscriptions
 
-    // console.log(">>userInfo", JSON.stringify(userInfo, null, ' '))
+    // log([">>userInfo", JSON.stringify(userInfo, null, ' ')])
 
     return userInfo
 
