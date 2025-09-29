@@ -48,7 +48,7 @@ services:
       retries: 6
 
   reader:
-    image: ghcr.io/biblemesh/toad-reader-server:pr-29  # FIXME tag
+    image: ghcr.io/biblemesh/toad-reader-server:edge
     depends_on:
       mysql:
         condition: service_healthy
@@ -137,7 +137,7 @@ services:
 include:
   - path: git@github.com:biblemesh/ereader-callback.git#16d35c3cc24b858910a9a7a7c1bb5ef14a0aeb52
     env_file: .env.callback
-  - path: git@github.com:biblemesh/shibboleth.git#c3f16e47119cb5f9f911bc518bd6c9020d79bf9f
+  - path: git@github.com:biblemesh/shibboleth.git#407e2f5e3ca77dce616387f2e92431e0924e2704
     env_file: .env.shibboleth
 
 volumes:
