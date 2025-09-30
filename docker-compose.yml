@@ -16,21 +16,21 @@ services:
       - mysql-init-script:/data/output:rw
     command: ["/data/entrypoint.sh"]
   mysql:
-    image: bitnami/mysql:8.0.40
+    image: mysql:8.0.40
+    # TODO remove the next line when we support the new auth plugin
+    command: mysqld --authentication-policy=mysql_native_password
     depends_on:
       mysql_init:
         condition: service_completed_successfully
     restart: always
     environment:
-      ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
       MYSQL_USER: ${DATABASE_USERNAME}
       MYSQL_PASSWORD: ${DATABASE_PASSWORD}
       MYSQL_DATABASE: ${DATABASE_NAME}
       MYSQL_PORT_NUMBER: ${DATABASE_PORT}
-      # TODO remove the next line when we support the new auth plugin
-      MYSQL_EXTRA_FLAGS: "--default-authentication-plugin=mysql_native_password"
     volumes:
-      - mysql-db:/bitnami/mysql/data
+      - mysql-db:/var/lib/mysql
       - ./db_structure.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - type: volume
         source: mysql-init-script
@@ -42,7 +42,7 @@ services:
     networks:
       - reader
     healthcheck:
-      test: ['CMD', '/opt/bitnami/scripts/mysql/healthcheck.sh']
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root']
       interval: 15s
       timeout: 5s
       retries: 6
