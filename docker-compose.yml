@@ -135,7 +135,7 @@ services:
       '
 
 include:
-  - path: git@github.com:biblemesh/ereader-callback.git#16d35c3cc24b858910a9a7a7c1bb5ef14a0aeb52
+  - path: git@github.com:biblemesh/ereader-callback.git#81d67c288c5a2c875dbfc351df4b7e6beeebaa06
     env_file: .env.callback
   - path: git@github.com:biblemesh/shibboleth.git#78bfa4d1cf29e02aed295b376c44dc634477a94d
     env_file: .env.shibboleth
