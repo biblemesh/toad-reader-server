@@ -48,7 +48,7 @@ services:
       retries: 6
 
   reader:
-    image: ghcr.io/biblemesh/toad-reader-server:edge
+    image: ghcr.io/biblemesh/toad-reader-server:bm-develop
     depends_on:
       mysql:
         condition: service_healthy
