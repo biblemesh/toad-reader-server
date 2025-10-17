@@ -67,7 +67,7 @@ jobs:
           echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '"TAG_VERSION_NUMBER=" + (.labels."org.opencontainers.image.version")' >> $GITHUB_ENV
           echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '"DATETIMENOW=" + (.labels."org.opencontainers.image.created")' >> $GITHUB_ENV
           scope="buildx-${{ matrix.node-version }}-"
-          if [ "${{ matrix.node_version }}" -eq $(cat .nvmrc) ]; then
+          if [ "${{ matrix.node-version }}" -eq $(cat .nvmrc) ]; then
             push=" --push"
           else
             push=""
