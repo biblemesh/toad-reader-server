@@ -50,6 +50,9 @@ services:
   reader:
     image: ghcr.io/biblemesh/toad-reader-server:bm-develop
     depends_on:
+      certificate-trust:
+        condition: service_completed_successfully
+        restart: true
       mysql:
         condition: service_healthy
     build:
@@ -59,6 +62,7 @@ services:
     volumes:
       - ./app.js:/app/app.js
       - ./src:/app/src
+      - linux-private-ca-certificates:/usr/local/share/ca-certificates
     init: true
     environment:
       APP_PATH: ${APP_PATH:-/index.html}
@@ -82,6 +86,7 @@ services:
       LOGIN_TEST_CODE: ${LOGIN_TEST_CODE:-}
       LOGIN_TEST_EMAIL: ${LOGIN_TEST_EMAIL:-}
       MARKETING_DOMAIN: ${MARKETING_DOMAIN}
+      NODE_EXTRA_CA_CERTS: /usr/local/share/ca-certificates/root.crt
       OVERRIDE_DATABASE_HOSTNAME: ${OVERRIDE_DATABASE_HOSTNAME:-}
       OVERRIDE_DATABASE_NAME: ${OVERRIDE_DATABASE_NAME:-}
       OVERRIDE_DATABASE_PASSWORD: ${OVERRIDE_DATABASE_PASSWORD:-}
@@ -136,7 +141,7 @@ services:
 include:
   - path: git@github.com:biblemesh/ereader-callback.git#bbf9575a4bb14b52a155bd9bf66eaed98c68a8ed
     env_file: .env.callback
-  - path: git@github.com:biblemesh/shibboleth.git#78bfa4d1cf29e02aed295b376c44dc634477a94d
+  - path: git@github.com:biblemesh/shibboleth.git#fe1891477e4713cf0d258a89537a8a6aff180717
     env_file: .env.shibboleth
 
 volumes:
