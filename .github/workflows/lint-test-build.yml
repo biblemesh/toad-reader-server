@@ -8,9 +8,6 @@ on:
       - bm-develop
 
 
-env:
-  DEFAULT_NODE_VERSION: 16
-
 permissions:
   contents: read
   packages: write
@@ -70,8 +67,13 @@ jobs:
           echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '"TAG_VERSION_NUMBER=" + (.labels."org.opencontainers.image.version")' >> $GITHUB_ENV
           echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '"DATETIMENOW=" + (.labels."org.opencontainers.image.created")' >> $GITHUB_ENV
           scope="buildx-${{ matrix.node-version }}-"
+          if [ "${{ matrix.node-version }}" -eq $(cat .nvmrc) ]; then
+            push=" --push"
+          else
+            push=""
+          fi
           echo CACHE_ARGS="--cache-from=type=gha,scope=$scope --cache-to=type=gha,scope=$scope,mode=max" >> $GITHUB_ENV
-          echo EXTRA_ARGS=--platform linux/amd64,linux/arm64 --push >> $GITHUB_ENV
+          echo EXTRA_ARGS=--platform linux/amd64,linux/arm64 $push >> $GITHUB_ENV
 
       - uses: actions/github-script@v6
         id: envs
