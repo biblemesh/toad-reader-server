@@ -379,11 +379,6 @@ const util = {
   // TODO remove old
   // old param is temporary
   getDataDomain: ({ domain, env, old }) => {
-    if(env ? env === 'dev' : process.env.IS_DEV) {
-      // dev environment
-      return `${process.env.DEV_NETWORK_IP || `localhost`}:8080`
-    }
-
     // Check IPv4 address
     if (domain.match(/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/)) {
       return domain
@@ -412,10 +407,6 @@ const util = {
     // Handle undefined host and quotes domain, where both won't match idp table entries
     if (!host || host === process.env.QUOTES_DOMAIN) {
       return host || ""
-    }
-
-    if(env ? env === 'dev' : process.env.IS_DEV) {
-      return `${process.env.DEV_NETWORK_IP || `localhost`}:19006`
     }
 
     if (host === 'localhost' && process.env.DEFAULT_IDP_DOMAIN) {
