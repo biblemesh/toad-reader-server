@@ -58,7 +58,6 @@ services:
     build:
       context: .
       target: development
-    command: ["npm", "start"]
     volumes:
       - ./app.js:/app/app.js
       - ./src:/app/src
