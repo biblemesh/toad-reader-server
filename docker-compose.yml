@@ -10,6 +10,8 @@ services:
       context: .
       dockerfile: Dockerfile.certs
     env_file: .env.shibboleth
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-k4dtiTVYWZyLuATjoanY8c2c8TjGWnBs}
     volumes:
       - ./add-data-to-sql-file.sh:/data/entrypoint.sh:ro
       - ./seeds.sql:/data/seeds.sql:ro
@@ -140,7 +142,7 @@ services:
 include:
   - path: git@github.com:biblemesh/ereader-callback.git#bbf9575a4bb14b52a155bd9bf66eaed98c68a8ed
     env_file: .env.callback
-  - path: git@github.com:biblemesh/shibboleth.git#c49c3c08211376b51734570c96da6336d2f2948a
+  - path: git@github.com:biblemesh/shibboleth.git#15a14551d5667780594e41729e39eb5afda74476
     env_file: .env.shibboleth
 
 volumes:
