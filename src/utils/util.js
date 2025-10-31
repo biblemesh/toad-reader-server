@@ -396,11 +396,7 @@ const util = {
   // TODO remove old
   // old param is temporary
   getDataOrigin: ({ domain, protocol=`https`, env, old }={}) => (
-    `${
-      (env ? env === 'dev' : process.env.IS_DEV)
-        ? `http`
-        : protocol
-    }://${util.getDataDomain({ domain, env, old })}`
+    `${protocol}://${util.getDataDomain({ domain, env, old })}`
   ),
 
   getIDPDomain: ({ host, env }) => {
