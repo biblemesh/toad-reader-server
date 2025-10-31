@@ -439,9 +439,11 @@ const util = {
 
   getFrontEndOrigin: ({ req, env }) => {
     let domain = util.getIDPDomain({ host: req.hostname || req.headers.host, env })
+    let protocol = util.getProtocol({ req, env })
 
     if(env ? env === 'dev' : process.env.IS_DEV) {
       domain = `${process.env.DEV_NETWORK_IP || `localhost`}:19006`
+      protocol = 'http'
     }
 
     // staging domain doesn't need to be manipulated
@@ -451,7 +453,7 @@ const util = {
       domain = `beta.${domain}`
     }
 
-    return `${util.getProtocol({ req, env })}://${domain}`
+    return `${protocol}://${domain}`
   },
 
   escapeHTML: text => (
