@@ -17,6 +17,8 @@ services:
       - ./seeds.sql:/data/seeds.sql:ro
       - mysql-init-script:/data/output:rw
     command: ["/data/entrypoint.sh"]
+    pull_policy: build
+
   mysql:
     image: mysql:8.0.40
     # TODO remove the next line when we support the new auth plugin
