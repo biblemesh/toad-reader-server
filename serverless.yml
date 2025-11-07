@@ -23,7 +23,6 @@ functions:
       DEFAULT_IDP_DOMAIN: ${param:DEFAULT_IDP_DOMAIN}
       IPV4_INTERNAL_NETWORK_REGEX: ${param:IPV4_INTERNAL_NETWORK_REGEX}
       IPV6_INTERNAL_NETWORK_REGEX: ${param:IPV6_INTERNAL_NETWORK_REGEX}
-      IS_STAGING: ${param:IS_STAGING}
       LOGIN_TEST_CODE: ${param:LOGIN_TEST_CODE}
       LOGIN_TEST_EMAIL: ${param:LOGIN_TEST_EMAIL}
       LOG_LEVEL: ${param:LOG_LEVEL}
@@ -50,7 +49,6 @@ functions:
     events:
       - schedule: rate(1 minute)
     environment:
-      IS_STAGING: ${param:IS_STAGING}
       DATABASE_NAME: ${param:DATABASE_NAME}
       DATABASE_HOSTNAME: ${param:DATABASE_HOSTNAME}
       DATABASE_PASSWORD: ${param:DATABASE_PASSWORD}
