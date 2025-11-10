@@ -75,7 +75,7 @@ jobs:
           echo CACHE_ARGS="--cache-from=type=gha,scope=$scope --cache-to=type=gha,scope=$scope,mode=max" >> $GITHUB_ENV
           echo EXTRA_ARGS=--platform linux/amd64,linux/arm64 $push >> $GITHUB_ENV
 
-      - uses: actions/github-script@v6
+      - uses: actions/github-script@v8
         id: envs
         with:
           script: |
