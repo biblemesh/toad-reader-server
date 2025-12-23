@@ -7,13 +7,11 @@ on:
     branches:
       - bm-develop
 
-
 permissions:
   contents: read
   packages: write
 
 jobs:
-
   build:
     name: ${{ matrix.action }} (${{ matrix.node-version }})
     runs-on: ubuntu-latest
@@ -21,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [16, 18]
+        node-version: [18, 20]
         action: [build, lint, test]
     steps:
       - uses: actions/checkout@v5
@@ -48,7 +46,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         env:
-          DOCKER_METADATA_SET_OUTPUT_ENV: "true"
+          DOCKER_METADATA_SET_OUTPUT_ENV: 'true'
         with:
           images: |
             ghcr.io/${{ github.repository }}
