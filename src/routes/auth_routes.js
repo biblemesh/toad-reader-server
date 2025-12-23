@@ -2,6 +2,7 @@ const { log } = require('../utils/logger')
 const util = require('../utils/util')
 const { i18n } = require("inline-i18n")
 const sendEmail = require("../utils/sendEmail")
+const { makePostStatusToParentStr } = require('../utils/web-funcs');
 
 const clearFromDeviceLoginLimitList = async ({ req, userId }) => {
   if(req.user.idpDeviceLoginLimit && userId >= 0) {
@@ -14,13 +15,15 @@ const clearFromDeviceLoginLimitList = async ({ req, userId }) => {
         let sessions = []
         try {
           sessions = JSON.parse(value) || []
-        } catch(err) {}
+        } catch(err) { // eslint-disable-line @typescript-eslint/no-unused-vars
+          return resolve();
+        }
 
         sessions = sessions.filter(session => session !== req.sessionID)
         util.sessionStore.set(
           id,
           JSON.stringify(sessions),
-          (err, value) => {
+          (err) => {
             if(err) return reject(err)
             resolve()
           }
@@ -31,7 +34,7 @@ const clearFromDeviceLoginLimitList = async ({ req, userId }) => {
 
   }
 }
-module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn, log) {
+module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn) {
 
   app.get('/setcookie',
     (req, res) => {
@@ -92,11 +95,11 @@ module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn,
   //         if([ 'localhost', DEVNETWORKIP ].includes(location.hostname)) {
   //           // dev environment
   //           webAppDomain = '*'
-  
+
   //         } else if(/\.data\.staging\.toadreader\.com$/.test(location.hostname)) {
   //           // staging environment
   //           webAppDomain = `https://${location.host.replace(/\.data\./, '.')}`
-  
+
   //         } else {
   //           // production environment
   //           webAppDomain = `https://${
@@ -107,7 +110,7 @@ module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn,
   //               .replace(/\[ DASH \]/g, '-')
   //           }`
   //         }
-  
+
   //         parent.postMessage(message, webAppDomain)
   //       }
 
@@ -146,26 +149,11 @@ module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn,
 
       const currentServerTime = util.getUTCTimeStamp()
 
-      const postStatusToParent = () => {
-
-        const message = JSON.stringify({
-          identifier: "sendCookiePlus",
-          payload: {
-            cookie: COOKIE,
-            userInfo: USERINFO,
-            currentServerTime: CURRENTSERVERTIME,
-          },
-        })
-
-        document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-        window.ReactNativeWebView.postMessage(message)
-
-      }
-
-      const postStatusToParentFunc = String(postStatusToParent)
-        .replace('COOKIE', JSON.stringify(util.getCookie(req)))
-        .replace('USERINFO', JSON.stringify(userInfo))
-        .replace('CURRENTSERVERTIME', JSON.stringify(currentServerTime))
+      const postStatusToParentFunc = makePostStatusToParentStr({
+        cookie: util.getCookie(req),
+        userInfo,
+        currentServerTime,
+      });
 
       res.send(`
         <html>
@@ -228,7 +216,7 @@ module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn,
     }
   );
 
-  app.get('/login/fail', 
+  app.get('/login/fail',
     function(req, res) {
       log('Report login failure');
       res.status(401).send('Login failed');
@@ -287,7 +275,7 @@ module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn,
   app.all(['/logout/callback', '/login'],
     async (req, res) => {
       log('Logout callback (will delete cookie)', 2)
-      req.user && await clearFromDeviceLoginLimitList({ req, userId: req.user.id })
+      if(req.user) { await clearFromDeviceLoginLimitList({ req, userId: req.user.id }); }
       req.logout()  // this will not work on Safari any longer since it will not send cookies in an iframe
       if(req.query.noredirect) {
         res.send({ success: true })
@@ -297,7 +285,7 @@ module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn,
     }
   )
 
-  app.get('/urls/:domain', 
+  app.get('/urls/:domain',
     (req, res) => {
       const { domain } = req.params
 
@@ -359,7 +347,7 @@ module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn,
     }
   );
 
-  app.get('/Shibboleth.sso/Metadata', 
+  app.get('/Shibboleth.sso/Metadata',
     function(req, res) {
       log('Metadata request');
       res.type('application/xml');
@@ -412,7 +400,7 @@ module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn,
       // if(process.env.IS_DEV) {
         log(`Login code: ${accessCode}`)
       // }
-      
+
       try {
 
         // send the email
@@ -463,7 +451,9 @@ module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn,
               if(sessions.length >= user.deviceLoginLimit) {
                 numSessionsThisWillLogOut = user.deviceLoginLimit
               }
-            } catch(err) {}
+            } catch(err) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+              resolve();
+            }
 
             resolve()
           })
@@ -544,7 +534,7 @@ module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn,
               })
 
               loginInfo = await util.getUserInfo({ idp, idpUserId, next, req, res, log })
-              
+
             } else {
               // create the user if they do not exist
               loginInfo = await util.updateUserInfo({

@@ -4,12 +4,19 @@ import prettierConfig from 'eslint-config-prettier';
 import tseslint from 'typescript-eslint';
 
 // This is needed until we upgrade to Node 18.
-global.structuredClone = (val) => JSON.parse(JSON.stringify(val))  // eslint-disable-line no-undef
+global.structuredClone = (val) => JSON.parse(JSON.stringify(val)); // eslint-disable-line no-undef
 
 export default tseslint.config([
   pluginJs.configs.recommended, // Apply recommended ESLint rules
   tseslint.configs.recommended, // Apply recommended TypeScript rules
   prettierConfig, // Disable rules that conflict with Prettier
+  {
+    files: ['**/*.browser.js'],
+    languageOptions: {
+      sourceType: 'script',
+      globals: globals.browser, // Enable browser global variables
+    },
+  },
   {
     files: ['**/*.js'],
     languageOptions: {

@@ -1,6 +1,8 @@
 const { log } = require('../utils/logger')
 /* global requireRouter */
 
+// FIXME replace this manual router with modern Express.js router config
+
 module.exports = function (
   app,
   s3,
@@ -8,7 +10,6 @@ module.exports = function (
   authFuncs,
   ensureAuthenticated,
   logIn,
-  log,
 ) {
   if (typeof requireRouter === 'undefined') {
     // for testing; it is difficult to mock the require function in this setup
@@ -181,7 +182,7 @@ module.exports = function (
 
   // serve widget_setup.js with or without auth
   app.get(
-    ['/src/js/widget_setup.js', '/scripts/widget_setup.js'],
+    ['/src/js/widget_setup.js', '/scripts/widget_setup.browser.js'],
     function (req, res) {
       var staticFile = path.join(process.cwd(), req.url);
 
