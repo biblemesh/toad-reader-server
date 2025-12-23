@@ -1,7 +1,7 @@
 # This file modified from https://gist.github.com/abstractvector/ed3f892ec0114e28b3d6dcdc4c39b1f2
 
 ARG ALPINE_VERSION=3.21
-ARG NODE_VERSION=18
+ARG NODE_VERSION=20
 
 ##########################
 # Cache-preserving image #
