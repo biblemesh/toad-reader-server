@@ -25,7 +25,7 @@ RUN (jq '.version = "1.0.0"' | jq '.packages."".version = "1.0.0"') < package-lo
 # Builder image #
 #################
 
-FROM bitnami/node:${NODE_VERSION} AS builder
+FROM node:${NODE_VERSION}-slim AS builder
 
 WORKDIR /app
 
@@ -64,7 +64,6 @@ WORKDIR /app
 COPY ./ ./
 
 COPY --from=builder /app/node_modules ./node_modules
-RUN echo "DEVELOPMENT index.html" > index.html
 
 HEALTHCHECK --interval=60s --timeout=10s --start-period=10s \
    CMD ["node", "./healthcheck.js"]

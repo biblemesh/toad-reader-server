@@ -1,3 +1,4 @@
+const { log } = require('../utils/logger')
 const util = require('../utils/util');
 
 var threadIdx = 0;

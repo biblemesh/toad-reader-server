@@ -2,16 +2,19 @@
 
 const http = require('http');
 
+const { log } = require('./src/utils/logger')
+
 http
-  .get(`http://127.0.0.1:${parseInt(process.env.PORT, 10) || process.env.PORT || 8080}/Shibboleth.sso/Metadata`, (res) => {
-    console.log('statusCode', res.statusCode);
-    if (res.statusCode === 200) {
-      process.exit(0);
-    } else {
-      process.exit(1);
-    }
-  })
+  .get(`http://localhost:${process.env.PORT || 8080}/Shibboleth.sso/Metadata`,
+    (res) => {
+      log(['statusCode', res.statusCode]);
+      if ([200, 302, 304].includes(res.statusCode)) {
+        process.exit(0);
+      } else {
+        process.exit(1);
+      }
+    })
   .on('error', (err) => {
-    console.log('error', err);
+    log(err, 3);
     process.exit(1);
   });

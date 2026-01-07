@@ -1,15 +1,33 @@
 # Installation (dev staging setup using docker compose)
 
 1. Copy .env-example to .env (this should work without modification)
-2. Populate other .env files from the other repos:
+1. Populate other .env files from the other repos:
    - `.env.callback` from [ereader-callback](biblemesh/ereader-callback) (`.env.dist`)
    - `.env.shibboleth` from [shibboleth](biblemesh/shibboleth) (`shibboleth-common/.env.dist`)
-3. Copy the secret file `caddy-pki.tar.gz` to the `secrets` directory, or create a new one containing the following files:
-   (the `caddy` service can create these files for you) - `authorities/local/root.key` - `authorities/local/root.crt` - `authorities/local/intermediate.crt` - `authorities/local/intermediate.key`
-4. Build and start the caddy service: `docker compose up --build -d caddy`
-5. Build all other services: `docker compose build`
-6. Start the services: `docker compose up` (note that the caddy service must be started first, otherwise you may
+1. Log into GitHub Packages using one of the following
+
+   1. Using Personal Access Token
+      1. Create GitHub [classic personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#personal-access-tokens-classic) with the `read:packages` scope and an expiration date a year from now. Unfortunately [fine-grained is not supported](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry)
+      1. Log into GitHub Packages using the GitHub personal access token as the password: `docker login ghcr.io`
+   1. Using OAuth Token with [GitHub CLI](https://cli.github.com/)
+
+      ```
+      gh auth login --scopes read:packages
+      gh auth token | docker login ghcr.io --password-stdin --username ${GITHUB_USERNAME}
+      ```
+
+1. Build and start the caddy service: `docker compose up -d caddy`
+1. Pull other services: `docker compose pull`
+1. Build and start the services: `docker compose up` (note that the caddy service must be started first, otherwise you may
    receive an error from Docker about the network)
+
+# Proxy auto-configuration file
+
+A file called `proxy.pac` is generated and hosted by Caddy, to simplify connecting to the services by domain name. To use it (assuming your Caddy service is accessible on `localhost`, set your proxy autoconfiguration URL to:
+
+    https://localhost:3128/proxy.pac
+
+You will also need to add the `rootCA.crt` root certificate to your OS or browser's certificates manager. This certificate is available inside the `biblemesh/shibboleth-common:1.0.0-dev` Docker image, after this has been built.
 
 # Installation (standalone server, dev mode)
 

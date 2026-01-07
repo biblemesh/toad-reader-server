@@ -10,12 +10,12 @@
     "ghcr.io/devcontainers/features/git:1": {}
   },
   "mounts": [
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.aws,target=/home/developer/.aws,type=bind"
+    "consistency=cached,source=${localEnv:USERPROFILE}/.aws,target=/home/developer/.aws,type=bind" // add ${localEnv:HOME} to source for Linux
   ],
   "name": "toad-reader-server",
   "postStartCommand": {
-    "git-ssh": "git config --global --unset gpg.ssh.program",
-    "git-safe.directory": "git config --global --add safe.directory ${containerWorkspaceFolder}"
+    "git-commit-signing": "git config --global --unset gpg.ssh.program",
+    "git-safe-directory": "git config --global --add safe.directory ${containerWorkspaceFolder}"
   },
   "runArgs": [
     "--name",

@@ -1,6 +1,7 @@
 const fs = require('fs')
 const { JSDOM } = require("jsdom")
 
+const { log } = require('./logger')
 const { SPACE_OR_PUNCTUATION, getFromS3 } = require("./util")
 
 const MYSQL_DEFAULT_STOP_WORDS_OVER_THREE_CHARS = [

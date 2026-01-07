@@ -1,4 +1,5 @@
 const AWS = require('aws-sdk')
+const { log } = require('./logger')
 
 // SES setup
 const sesConfig = {
@@ -40,14 +41,14 @@ const executeSendEmail = ({ queuedEmail, resolve, reject }) => {
     try {
 
       if(err) {
-        console.log('Email error: ', err, JSON.stringify(queuedEmail))
-        reject(error.message || 'email send failed')
+        log(['Email error: ', err, JSON.stringify(queuedEmail)], 3)
+        reject(err.message || 'email send failed')
       }
 
       resolve && resolve(true)
 
     } catch(err) {
-      reject(error.message || 'email send failed')
+      reject(err.message || 'email send failed')
     }
 
   })
