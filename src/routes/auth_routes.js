@@ -2,7 +2,7 @@ const { log } = require('../utils/logger')
 const util = require('../utils/util')
 const { i18n } = require("inline-i18n")
 const sendEmail = require("../utils/sendEmail")
-const { makePostStatusToParentStr } = require('../utils/web-funcs');
+const { makePostStatusToParentStr } = require('../utils/web-funcs.browser');
 
 const clearFromDeviceLoginLimitList = async ({ req, userId }) => {
   if(req.user.idpDeviceLoginLimit && userId >= 0) {
