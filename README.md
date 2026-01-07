@@ -62,8 +62,6 @@ npm start
   npm test -- auth_routes
   ```
 
-  `npm run push-to-aws`
-
 - Watch mode:
 
   ```bash
@@ -75,12 +73,6 @@ npm start
 - Make sure your `.env` files are correctly populated.
 - Watch out for default setting assumptions (e.g., default language, video quality).
 - All global states should be reset between tests to prevent cross-contamination.
-
-# Updating Staging
-
-```bash
-npm run push-to-aws
-```
 
 # Demo
 

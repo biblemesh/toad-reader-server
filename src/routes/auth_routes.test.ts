@@ -100,19 +100,7 @@ const setupSuccessfulMocks = (): void => {
   mockUtilFunctions.getIDPDomain.mockReturnValue('example.com');
   mockUtilFunctions.getDataDomain.mockReturnValue('data.example.com');
   mockUtilFunctions.getDataOrigin.mockReturnValue('https://data.example.com');
-  mockUtilFunctions.escapeHTML.mockImplementation((str: string) =>
-    str.replace(
-      /[&<>"']/g,
-      (match) =>
-        ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;',
-        })[match] || match,
-    ),
-  );
+  mockUtilFunctions.escapeHTML.mockImplementation((text: string) => text);
   mockUtilFunctions.isValidEmail.mockReturnValue(true);
   mockUtilFunctions.createAccessCode.mockReturnValue('123456');
   mockUtilFunctions.getLoginInfoByAccessCode.mockResolvedValue(null);
@@ -303,7 +291,6 @@ describe('auth_routes', () => {
     // Mock process.env
     process.env.LOGIN_TEST_EMAIL = 'test@example.com';
     process.env.LOGIN_TEST_CODE = 'TEST123';
-    process.env.IS_DEV = 'true';
 
     // Initialize routes with mocked dependencies
     authRoutes(
