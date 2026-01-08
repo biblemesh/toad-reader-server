@@ -1,4 +1,4 @@
-const { log } = require('../utils/logger')
+const { log } = require('../utils/logger');
 /* global requireRouter */
 
 // FIXME replace this manual router with modern Express.js router config
@@ -182,9 +182,9 @@ module.exports = function (
 
   // serve widget_setup.js with or without auth
   app.get(
-    ['/src/js/widget_setup.js', '/scripts/widget_setup.browser.js'],
+    ['/src/js/widget_setup.js', '/scripts/widget_setup.js'],
     function (req, res) {
-      var staticFile = path.join(process.cwd(), req.url);
+      const staticFile = path.resolve('scripts/widget_setup.browser.js');
 
       if (fs.existsSync(staticFile)) {
         log(['Deliver static file', staticFile]);
@@ -192,6 +192,9 @@ module.exports = function (
           dotfiles: 'allow',
           cacheControl: false,
         });
+      } else {
+        log(['File not found', staticFile], 2);
+        res.status(404).send({ error: 'Not found' });
       }
     },
   );
