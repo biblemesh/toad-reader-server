@@ -306,7 +306,7 @@ describe('auth_routes', () => {
   afterEach(() => {
     jest.clearAllMocks();
     // Clean up any lingering references
-    app = null as unknown as Express;
+    app = undefined;
   });
 
   // ===== SETCOOKIE TESTS =====
