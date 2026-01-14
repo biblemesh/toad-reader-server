@@ -85,7 +85,7 @@ var getXapiContext = function(params) {
   if(platform === 'ios') {
     appURI = params.req.user.idpIosAppURL || "https://itunes.apple.com";
   }
-  
+
   if(platform === 'android') {
     appURI = params.req.user.idpAndroidAppURL || "https://play.google.com";
   }
@@ -149,9 +149,9 @@ const openConnection = () => {
     queryFormat: function (query, values) {
       if(!values) return query
 
-      if(/\:(\w+)/.test(query)) {
-        return query.replace(/\:(\w+)/g, (txt, key) => {
-          if(values.hasOwnProperty(key)) {
+      if(/:(\w+)/.test(query)) {
+        return query.replace(/:(\w+)/g, (txt, key) => {
+          if(Object.hasOwn(values, key)) {
             return this.escape(values[key])
           }
           return txt
@@ -214,7 +214,7 @@ const util = {
     if(!mysqlDatetime) return 0
 
     // Split timestamp into [ Y, M, D, h, m, s, ms ]
-    var t = mysqlDatetime.split(/[- :\.]/)
+    var t = mysqlDatetime.split(/[- :.]/)
 
     // Apply each element to the Date function
     var d = new Date(Date.UTC(t[0], t[1]-1, t[2], t[3] || 0, t[4] || 0, t[5] || 0, t[6] || 0))
@@ -304,7 +304,7 @@ const util = {
           || process.env.REQUIRE_HTTPS
         )
     )
-      ? 'https' 
+      ? 'https'
       : 'http'
   ),
 
@@ -376,9 +376,7 @@ const util = {
     });
   },
 
-  // TODO remove old
-  // old param is temporary
-  getDataDomain: ({ domain, env, old }) => {
+  getDataDomain: ({ domain }) => {
     // Check IPv4 address
     if (domain.match(/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/)) {
       return domain
@@ -393,13 +391,11 @@ const util = {
     return `data.${domain}`
   },
 
-  // TODO remove old
-  // old param is temporary
-  getDataOrigin: ({ domain, protocol=`https`, env, old }={}) => (
-    `${protocol}://${util.getDataDomain({ domain, env, old })}`
+  getDataOrigin: ({ domain, protocol=`https` }={}) => (
+    `${protocol}://${util.getDataDomain({ domain })}`
   ),
 
-  getIDPDomain: ({ host, env }) => {
+  getIDPDomain: ({ host }) => {
     // Handle undefined host and quotes domain, where both won't match idp table entries
     if (!host || host === process.env.QUOTES_DOMAIN) {
       return host || ""
@@ -444,7 +440,7 @@ const util = {
 
     // staging domain doesn't need to be manipulated
 
-    const betaUrlMatch = (req.headers.referer || "").match(/^https?:\/\/(beta\.[^\/]*)(\/|$)/)
+    const betaUrlMatch = (req.headers.referer || "").match(/^https?:\/\/(beta\.[^/]*)(\/|$)/)
     if(env ? env === 'beta' : (betaUrlMatch || req.query.isBeta)) {
       domain = `beta.${domain}`
     }
@@ -488,7 +484,7 @@ const util = {
           return res.send({
             success: false,
             error: 'User not found.',
-          })      
+          })
         } else if(response.status !== 200) {
           log([`Invalid response from userInfoEndpoint`, url], 3)
           // next('Bad login.')
@@ -499,7 +495,7 @@ const util = {
         log(['Response from userInfoEndpoint', responseJson], 1)
 
         const userInfoResponse = responseJson[0] || { idpUserId, email: idpUserId, bookIds: "" }
-        
+
         userInfoResponse.books = userInfoResponse.bookIds.split(',').map(id => ({ id: parseInt(id, 10) }))
         delete userInfoResponse.bookIds
 
@@ -562,7 +558,9 @@ const util = {
           let responseText
           try {
             responseText = await response.text()
-          } catch(e) {}
+          } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+            return;
+          }
           log([`User not found (401) response from userInfoEndpoint`, responseText], 3)
           return res.send({
             success: false,
@@ -826,7 +824,7 @@ const util = {
       const idpBookIds = rows.map(({ book_id }) => parseInt(book_id, 10))
 
       const filteredBooks = books.filter(({ id }) => idpBookIds.includes(parseInt(id, 10)))
-  
+
       log(['filtered books by the book-idp', filteredBooks])
 
       const updateBookInstance = async ({ id, version, expiration, enhancedToolsExpiration, flags }) => {
@@ -902,7 +900,7 @@ const util = {
       const idpSubscriptionIds = rows.map(({ id }) => parseInt(id, 10))
 
       const filteredSubscriptions = subscriptions.filter(({ id }) => idpSubscriptionIds.includes(parseInt(id, 10)))
-  
+
       log(['filtered subscriptions by the subscription table', filteredSubscriptions])
 
       const updateSubscriptionInstance = async ({ id, expiration, enhancedToolsExpiration }) => {
@@ -966,7 +964,7 @@ const util = {
     }
   },
 
-  hasAccess: ({ bookId, requireEnhancedToolsAccess=false, req, log, next }) => new Promise(resolveAll => {
+  hasAccess: ({ bookId, requireEnhancedToolsAccess=false, req, next }) => new Promise(resolveAll => {
 
     if(!req.isAuthenticated()) {
       resolveAll(false);
@@ -1152,7 +1150,9 @@ const util = {
                 )
                 : null
             )
-          } catch(e) {}
+          } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+            return;
+          }
 
           return {
             idp_id: row1.idp_id,
@@ -1259,7 +1259,7 @@ const util = {
             userId,
             bookId,
           },
-          (err, results) => {
+          (err) => {
             if (err) throw(err)
             resolve()
           }
@@ -1272,7 +1272,7 @@ const util = {
   parseSessionSharingAsRecipientInfo: ({ sessionSharingAsRecipientInfo }) => {
     try {
       return JSON.parse(sessionSharingAsRecipientInfo);
-    } catch(e) {
+    } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
       return null
     }
   },
@@ -1302,7 +1302,9 @@ const util = {
         if(row[col] !== undefined) {
           try {
             row[col] = JSON.parse(row[col])
-          } catch(e) {}
+          } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+            return;
+          }
         }
       })
     })
@@ -1331,7 +1333,7 @@ const util = {
 
       try {
         resolve(JSON.parse(value))
-      } catch(e) {
+      } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
         resolve()
       }
 
@@ -1347,7 +1349,7 @@ const util = {
       JSON.stringify(loginInfo),
       'EX',
       (60 * 15),  // expires in 15 minutes
-      (err, value) => {
+      (err) => {
         if(err) return next(err)
         resolve()
       }
@@ -1355,7 +1357,7 @@ const util = {
   }),
 
   isValidEmail: email => {
-    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     return re.test(email)
   },
 
@@ -1378,7 +1380,7 @@ const util = {
         }
       )
 
-      // log(['runQuery SQL: ', sql])
+       log(['runQuery SQL: ', sql], 1)  // only log if verbose
     })
   ),
 
@@ -1423,18 +1425,18 @@ const util = {
       [util.getIDPDomain({ host: req.hostname || req.headers.host })],
       (err, rows) => {
         if (err) return next(err)
-  
+
         if(rows.length !== 1) {
           log(["Request came from invalid host.", req.hostname || req.headers.host], 3)
           return res.status(403).send({ success: false })
         }
-  
+
         req.idpLang = rows[0].language || 'en'
-  
+
         return next()
       },
     )
-  
+
   },
 
   compileScheduleDateItemsTogether: ({ scheduleDates, classroomUid }) => {
@@ -1474,9 +1476,9 @@ const util = {
 
   combineItems: ({ labels, ...i18nOptions }) => {
     const nonEmptyLabels = labels.filter(Boolean)
-  
+
     if(nonEmptyLabels.length === 0) return ""
-  
+
     return nonEmptyLabels.reduce((item1, item2) => (
       i18n("{{item1}}, {{item2}}", {
         item1,
@@ -1522,7 +1524,7 @@ const util = {
     return true
   },
 
-  dieOnNoClassroomEditPermission: async ({ next, req, log, classroomUid }) => {
+  dieOnNoClassroomEditPermission: async ({ next, req, res, log, classroomUid }) => {
     const isDefaultClassroomUid = /^[0-9]+-[0-9]+$/.test(classroomUid)
     const now = util.timestampToMySQLDatetime()
 
@@ -1773,7 +1775,7 @@ const util = {
             noChange: true,
             newBookId,
           })
-          
+
         } else if(req.query.hash !== undefined) {
           log(['Deliver library', rows.length])
           return res.send({
@@ -1781,7 +1783,7 @@ const util = {
             books: rows,
             newBookId,
           })
-          
+
         } else {
           log(['Deliver library (old version without hash)', rows.length])
           return res.send(rows)

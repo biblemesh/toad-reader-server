@@ -27,7 +27,7 @@
     "translate-convert-json-to-csv": "node node_modules/inline-i18n/scripts/convertTranslationJSONtoCSV.js"
   },
   "lint-staged": {
-    "*.+(json|css|md|scss)": [
+    "*.+(json|css|md|scss|yml|yaml)": [
       "prettier --write"
     ],
     "*.+(js|jsx|ts|tsx|mjs)": [

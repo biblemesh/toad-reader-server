@@ -7,7 +7,7 @@ const { log } = require('./logger')
 
 let currentNumberOfWaitingShopifyRequests = 0
 
-const getShopifyUserInfo = async ({ email, idp, log, waitToExecuteIfNecessary }) => {
+const getShopifyUserInfo = async ({ email, idp, waitToExecuteIfNecessary }) => {
 
   try {
 
@@ -88,7 +88,9 @@ const getShopifyUserInfo = async ({ email, idp, log, waitToExecuteIfNecessary })
           const { value } = metafields.find(({ key, namespace }) => (namespace === `custom` && key === `toad_reader_info`)) || {}
           customerMetafieldLines = `customer:\n${JSON.parse(value).join(`\n`)}`
           processedAtTimeById[`customer:`] = 1
-        } catch(err) {}
+        } catch(err) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+          return;
+        }
 
         // bookIds
         log(['Get shopify orders by customer id', id, idp.name], 1)
@@ -142,11 +144,11 @@ const getShopifyUserInfo = async ({ email, idp, log, waitToExecuteIfNecessary })
 
       ;(`${customerMetafieldLines}\n${toadReaderCollectionHtml}`.match(/(?:product|variants|customer):.*\n(?:(?:book|subscription):.*\n)*/g) || []).forEach(productOrVariant => {
 
-        const [ x, productOrVariantKey, booksAndSubscriptions ] = productOrVariant.match(/^((?:product|variants|customer):.*)\n((?:.|\n)*)$/)
+        const [ , productOrVariantKey, booksAndSubscriptions ] = productOrVariant.match(/^((?:product|variants|customer):.*)\n((?:.|\n)*)$/)
 
         const processedAtTime = processedAtTimeById[productOrVariantKey]
         if(!processedAtTime) return
-        
+
         booksAndSubscriptions.replace(/^\n+|\n+$/g, '').split('\n').forEach(infoStr => {
 
           let item = {}

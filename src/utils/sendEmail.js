@@ -5,7 +5,7 @@ const { i18n } = require("inline-i18n")
 const sendEmail = input => {
 
   if(input instanceof Array) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const sendEmails = () => {
         if(input.length > 0) {
           const nextEmailInput = input.pop()
@@ -55,13 +55,13 @@ const sendEmail = input => {
                     ${util.escapeHTML(domain)}
                   </a>
                 </div>
-              </div> 
-            </div>  
-          </div>  
+              </div>
+            </div>
+          </div>
         `
 
         body = body.replace(
-          /BUTTON\[([^\]]*)\]\(([^\)]*)\)/g,
+          /BUTTON\[([^\]]*)\]\(([^)]*)\)/g,
           `
             <a href="$2">
               <span style="display: inline-block; padding: 8px 16px; background-color: #444; border-radius: 4px; text-transform: uppercase; font-size: 13px; color: white;">
@@ -72,13 +72,13 @@ const sendEmail = input => {
         )
 
       toAddrs = toAddrs instanceof Array ? toAddrs : [toAddrs]
-      fromAddr = fromEmail || `${process.env.DEFAULT_FROM_EMAIL}`
+      let fromAddr = fromEmail || `${process.env.DEFAULT_FROM_EMAIL}`
       replyToAddrs = replyToAddrs || fromAddr
       replyToAddrs = replyToAddrs instanceof Array ? replyToAddrs : [replyToAddrs]
 
       // remove invalid chars
       const fixAddr = addr => {
-        const [ x, name, email ] = addr.match(/^(.*) <([^>]+)>$/) || []
+        const [ , name, email ] = addr.match(/^(.*) <([^>]+)>$/) || []
         if(!name) return addr
         return `${name.replace(/[^-a-z. ]/gi, ``)} <${email}>`
       }

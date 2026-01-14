@@ -238,7 +238,9 @@ const logIn = ({ userId, req, next, deviceLoginLimit }) => {
           let sessions = []
           try {
             sessions = JSON.parse(value) || []
-          } catch(err) {}
+          } catch(err) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+            return;
+          }
 
           if(!sessions.includes(req.sessionID)) {
             sessions = (
@@ -249,7 +251,7 @@ const logIn = ({ userId, req, next, deviceLoginLimit }) => {
             util.sessionStore.set(
               id,
               JSON.stringify(sessions),
-              (err, value) => {
+              (err) => {
                 if(err) return next(err)
                 next()
               }
@@ -318,7 +320,7 @@ const strategyCallback = function(req, idp, profile, done) {
       log(['Bad login', profile], 3)
       done('Bad login.')
     }
-  
+
     util.updateUserInfo({ log, userInfo, idpId, updateLastLoginAt: true, next: done, req }).then(returnUser)
   }
 }
@@ -424,7 +426,7 @@ readyPromises.push(
                 log('Redirect to SLO')
                 samlStrategy.logout({ user: req.user.ssoData }, function(err2, req2){
                   if (err2) return next(err2)
-    
+
                   log('Back from SLO')
                   //redirect to the IdP Logout URL
                   res.redirect(req2)
@@ -462,7 +464,9 @@ const ensureAuthenticated = async (req, res, next) => {
       let sessions = []
       try {
         sessions = JSON.parse(value) || []
-      } catch(err) {}
+      } catch(err) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+        return;
+      }
 
       if(!sessions.includes(req.sessionID)) {
         return resolve(false)
@@ -524,7 +528,7 @@ const ensureAuthenticated = async (req, res, next) => {
           req.headers['app-request']
           && req.originalUrl.match(/^\/usersetup\.json/)
         )
-        || req.originalUrl.match(/^\/(book\/[^\/]*|\?.*)?$/)
+        || req.originalUrl.match(/^\/(book\/[^/]*|\?.*)?$/)
       )
     )
   ) {  // library or book call
@@ -540,7 +544,7 @@ const ensureAuthenticated = async (req, res, next) => {
     //     </script>
     //   `)
     // }
-    
+
     log('Checking if IDP requires authentication')
     global.connection.query('SELECT * FROM `idp` WHERE domain=?',
       [util.getIDPDomain({ host: req.hostname || req.headers.host })],
@@ -550,7 +554,7 @@ const ensureAuthenticated = async (req, res, next) => {
 
         if(!idp) {
           log(['Tenant not found: ', req.hostname || req.headers.host], 2)
-          
+
           // Debug mode: return detailed JSON response for debugging
           if(process.env.DEBUG === 'true') {
             return res.status(404).json({
@@ -559,7 +563,7 @@ const ensureAuthenticated = async (req, res, next) => {
               failedQuery: "SELECT * FROM `idp` WHERE domain=?"
             })
           }
-          
+
           // Production/staging: redirect to marketing URL
           return res.redirect('https://' + process.env.MARKETING_DOMAIN + '?tenant_not_found=1')
 
@@ -684,7 +688,9 @@ app.use(function(req, res, next) {
       || req.query.cookieOverride
       || JSON.parse(req.body.RelayState).cookieOverride
       || req.headers.cookie
-  } catch(e) {}
+  } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+    return;
+  }
   next()
 })
 app.use(cookieParser())
@@ -699,7 +705,7 @@ app.use(passport.session())
 // require('./src/sockets/sockets')({ server, sessionParser, log })
 
 // force HTTPS
-app.use('*', function(req, res, next) {  
+app.use('*', function(req, res, next) {
   if(!req.secure && req.headers['x-forwarded-proto'] !== 'https' && process.env.REQUIRE_HTTPS) {
     if(!/^[0-9.]+$/.test(req.headers.host)) {  // don't log all the health checks coming from IPs
       log(['Go to HTTPS', req.headers.host + req.url])

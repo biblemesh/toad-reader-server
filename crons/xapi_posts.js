@@ -3,7 +3,7 @@ const uuidv4 = require('uuid/v4');
 const { log } = require('../src/utils/logger')
 const util = require('../src/utils/util');
 
-module.exports = async ({ next }) => {
+module.exports = async () => {
 
   const cronRunUid = uuidv4()
   const currentMySQLDatetime = util.timestampToMySQLDatetime();
@@ -78,7 +78,9 @@ module.exports = async ({ next }) => {
                     let json = 'No response JSON'
                     try {
                       json = await res.json()
-                    } catch(err) {}
+                    } catch(err) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+                      return;
+                    }
                     log(['Cron: Bad xapi post for idp id #' + row.id, json.warnings || json, JSON.stringify(statements), cronRunUid], 2);
                     markDone();
                     return;
@@ -90,15 +92,15 @@ module.exports = async ({ next }) => {
                   statementRows.forEach(function(statementRow) {
                     statementIds.push(statementRow.id);
                   });
-        
+
                   log(['Cron: Delete successfully sent statements from xapiQueue queue. Ids: ' + statementIds.join(', '), cronRunUid]);
-                  global.connection.query('DELETE FROM `xapiQueue` WHERE id IN(?)', [statementIds], function (err, result) {
+                  global.connection.query('DELETE FROM `xapiQueue` WHERE id IN(?)', [statementIds], function (err) {
                     if (err) log([err, cronRunUid], 3);
                     markDone();
                   });
-        
+
                 })
-                .catch(function(err) {
+                .catch(function() {
                   log(['Cron: Xapi post failed for idp id #' + row.id, cronRunUid]);
                   markDone();
                 })

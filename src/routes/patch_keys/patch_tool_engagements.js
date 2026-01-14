@@ -15,7 +15,7 @@ const getErrorObj = error => ({
 })
 
 module.exports = {
-  
+
   addPreQueries: ({
     params,
     classrooms,
@@ -86,7 +86,7 @@ module.exports = {
       let parseError
 
       // compile answers together
-      dbToolEngagements = dbToolEngagements.filter(dbToolEngagement => {
+      dbToolEngagements.forEach(dbToolEngagement => {
         const { uid, toolType, isDiscussion, tool_uid, question_index, choice_index } = dbToolEngagement
         const qIdx = parseInt(question_index)
         const chIdx = parseInt(choice_index)
@@ -102,7 +102,7 @@ module.exports = {
           parseError = `invalid data: cannot patch engagement for toolType ${toolType}`
           return false
         }
-  
+
         if([ 'QUIZ' ].includes(toolType) && toolUidsForToolEngagementsWithoutUids.includes(tool_uid)) {
           parseError = `invalid data: cannot patch engagement of toolType ${toolType} without uid`
           return false
@@ -169,7 +169,7 @@ module.exports = {
           if(dbToolEngagement && toolEngagement.tool_uid !== dbToolEngagement.tool_uid) {
             return getErrorObj('invalid data: tool engagement associated with wrong tool')
           }
-  
+
           if(!toolEngagement.submitted_at && !toolEngagement._delete) {
             return getErrorObj('invalid data: either submitted_at and/or _delete must be provided when uid is present')
           }
@@ -230,7 +230,7 @@ module.exports = {
 
           const { answers } = toolEngagement
           delete toolEngagement.answers
-  
+
           if(toolEngagement._delete) {  // if _delete is present, then delete
             if(!dbToolEngagement) {
               // shouldn't get here, but just ignore if it does
@@ -281,8 +281,8 @@ module.exports = {
                       choice_index,
                     }],
                   })
-                }           
-              }              
+                }
+              }
             })
 
             if(dbAnswers.length > answers.length) {

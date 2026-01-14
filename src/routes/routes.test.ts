@@ -19,9 +19,8 @@ describe('base router', () => {
   const authFuncs = jest.fn();
   const ensureAuthenticated = jest.fn();
   const logIn = jest.fn();
-  const log = jest.fn();
 
-  setupRoutes(app, s3, passport, authFuncs, ensureAuthenticated, logIn, log);
+  setupRoutes(app, s3, passport, authFuncs, ensureAuthenticated, logIn);
 
   afterEach(() => {
     jest.resetAllMocks();
@@ -49,4 +48,14 @@ describe('base router', () => {
       .expect('Content-Type', /epub/)
       .expect('foo bar baz');
   });
+
+  it.each([['/src/js/widget_setup.js', '/scripts/widget_setup.js']])(
+    'GET %s',
+    async (url) => {
+      await request(app)
+        .get(url)
+        .expect(200)
+        .expect('Content-Type', /javascript/);
+    },
+  );
 });

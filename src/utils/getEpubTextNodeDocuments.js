@@ -27,7 +27,7 @@ const MYSQL_DEFAULT_STOP_WORDS_OVER_THREE_CHARS = [
 ]
 const normalizeHTMLText = text => text.replace(/\s\s+/g, ' ')
 
-const getEpubTextNodeDocuments = async ({ spineItemPath, spineIdRef, documentIndex, searchTermCounts, log }) => {
+const getEpubTextNodeDocuments = async ({ spineItemPath, spineIdRef, documentIndex, searchTermCounts }) => {
 
   if(!/\.x?html$/i.test(spineItemPath)) {
     return {

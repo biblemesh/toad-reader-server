@@ -4,7 +4,7 @@ const patchLatestLocation = require('./patch_keys/patch_latest_location')
 const patchHighlights = require('./patch_keys/patch_highlights')
 const patchClassrooms = require('./patch_keys/patch_classrooms')
 
-module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
+module.exports = function (app, ensureAuthenticatedAndCheckIDP) {
 
   // books.toadreader.com/users/{user_id}/books/{book_id}.json
   app.all('/users/:userId/books/:bookId.json', ensureAuthenticatedAndCheckIDP, function (req, res, next) {
@@ -14,7 +14,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
       if(parseInt(req.params.userId, 10) !== req.user.id) {
         res.status(403).send({ error: 'Forbidden' });
       }
-  
+
       log(['Attempting patch', JSON.stringify(req.body)]);
 
       // A JSON array of user-data book objects is sent to the Readium server,
@@ -50,7 +50,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
         function (err, results) {
           if (err) return next(err);
 
-          resultsObj = {}
+          const resultsObj = {}
           results.forEach((result, idx) => {
             resultsObj[preQueries.resultKeys[idx]] = result;
           })
@@ -89,7 +89,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
               global.connection.query(
                 query.query,
                 query.vars,
-                async (err, result) => {
+                async (err) => {
                   if(err) {
                     return next(err)
                   }
@@ -130,7 +130,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
                   runAQuery()
                 }
               )
-              
+
             } else {
               if(containedOldPatch) {
                 // When one or more object was not updated due to an old updated_at timestamp (i.e. stale data).

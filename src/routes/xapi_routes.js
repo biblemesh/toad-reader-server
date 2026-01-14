@@ -3,7 +3,7 @@ const util = require('../utils/util');
 
 var threadIdx = 0;
 
-module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
+module.exports = function (app, ensureAuthenticatedAndCheckIDP) {
 
   // books.toadreader.com/reportReading
   app.post('/reportReading', ensureAuthenticatedAndCheckIDP, function (req, res, next) {
@@ -23,7 +23,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
 
     global.connection.query('SELECT * FROM `book` WHERE id IN(?)',
       [req.body.readingRecords.map(function(reading) { return reading.bookId })],
-      function (err, rows, fields) {
+      function (err, rows) {
         if (err) return next(err);
 
         var books = {};
@@ -40,7 +40,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
             log(['Invalid reading record - skipping', `thread:${threadId}`, reading], 3);
             return;
           }
-    
+
           var book = books[reading.bookId];
 
           const durationInSeconds = parseInt((reading.endTime - reading.startTime) / 1000, 10)
@@ -81,21 +81,21 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
               },
             })
           }
-    
+
         })
 
         var runAQuery = function() {
           if(queriesToRun.length > 0) {
             var query = queriesToRun.shift();
             log(['Report reading query', `thread:${threadId}`, query]);
-            global.connection.query(query.query, query.vars, function (err, result) {
+            global.connection.query(query.query, query.vars, function (err) {
               if (err && err.code !== 'ER_DUP_ENTRY') {
                 log(['Duplicate and so ignored', `thread:${threadId}`], 3);
                 // return next(err);
               }
               runAQuery();
             })
-            
+
           } else {
             // When there is success on all objects
             log(['Report reads successful', `thread:${threadId}`])
@@ -108,5 +108,5 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, log) {
     );
 
   })
-  
+
 }
