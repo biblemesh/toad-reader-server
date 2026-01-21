@@ -1,23 +1,23 @@
 ////////////// REQUIRES //////////////
-require("./src/instrument.js");
+require('./src/instrument.js');
 
-const Sentry = require("@sentry/node");
-const express = require('express')
-const cors = require('cors')
-const app = express()
-const http = require('http')
-// const serverless = require("serverless-http")
-const bodyParser = require('body-parser')
-const cookieParser = require('cookie-parser')
-const passport = require('passport')
-const saml = require('passport-saml')
-require('dotenv').load()  //loads the local environment
-const util = require('./src/utils/util')
-const jwt = require('jsonwebtoken')
-const { i18nSetup } = require("inline-i18n")
-const fs = require('fs')
-const sendEmail = require('./src/utils/sendEmail')
-require("array-flat-polyfill")  // Array.flat function
+const saml = require('@node-saml/passport-saml');
+const Sentry = require('@sentry/node');
+const express = require('express');
+const cors = require('cors');
+const app = express();
+const http = require('http');
+// const serverless = require('serverless-http');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const passport = require('passport');
+require('dotenv').load();  //loads the local environment
+const util = require('./src/utils/util');
+const jwt = require('jsonwebtoken');
+const { i18nSetup } = require('inline-i18n');
+const fs = require('fs');
+const sendEmail = require('./src/utils/sendEmail');
+require('array-flat-polyfill');  // Array.flat function
 const { log } = require('./src/utils/logger.js');
 
 ////////////// SETUP SERVER //////////////
