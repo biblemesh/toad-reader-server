@@ -2,7 +2,7 @@ const { log } = require('../utils/logger')
 const getShopifyUserInfo = require('../utils/getShopifyUserInfo')
 var util = require('../utils/util')
 
-module.exports = function (app, log) {
+module.exports = function (app) {
 
   app.post('/updateuserinfo',
     util.decodeJWT({ jwtColInIdp: 'userInfoJWT', log }),
@@ -79,7 +79,7 @@ module.exports = function (app, log) {
           // next('Bad login.')
           throw err
         }
-  
+
       }
 
       res.send({ success: true })

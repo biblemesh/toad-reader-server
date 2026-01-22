@@ -25,18 +25,18 @@ const executeSendEmail = ({ queuedEmail, resolve, reject }) => {
     Message: {
       Body: {
         Html: {
-          Charset: "UTF-8", 
+          Charset: "UTF-8",
           Data: body,
-        }, 
-      }, 
+        },
+      },
       Subject: {
-        Charset: "UTF-8", 
+        Charset: "UTF-8",
         Data: subject,
       }
-    }, 
-    Source: fromAddr, 
+    },
+    Source: fromAddr,
     ReplyToAddresses: replyToAddrs,
-  }, async (err, data) => {
+  }, async (err) => {
 
     try {
 
@@ -45,7 +45,7 @@ const executeSendEmail = ({ queuedEmail, resolve, reject }) => {
         reject(err.message || 'email send failed')
       }
 
-      resolve && resolve(true)
+      resolve(true)
 
     } catch(err) {
       reject(err.message || 'email send failed')

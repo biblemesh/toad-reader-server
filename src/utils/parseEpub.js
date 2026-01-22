@@ -15,7 +15,7 @@ const normalizePath = path => {
   path = path.replace(/\/\/+/g, "/")
 
   // get rid of unneeded ../'s
-  const removeDirBack = p => p.replace(/[^\/]+\/\.\.\//g, "")
+  const removeDirBack = p => p.replace(/[^/]+\/\.\.\//g, "")
   while(removeDirBack(path) !== path) {
     path = removeDirBack(path)
   }
@@ -46,7 +46,7 @@ const getXmlAsObj = async ({ uri }) => {
   )
 }
 
-module.exports = async ({ baseUri, log }) => {
+module.exports = async ({ baseUri }) => {
 
   const info = { success: true }
 
@@ -68,7 +68,7 @@ module.exports = async ({ baseUri, log }) => {
     const opfRelativeUriPieces = opfRelativeUri.split('/')
     opfRelativeUriPieces.pop()
     opfDir = opfRelativeUriPieces.join('/') + (opfRelativeUriPieces.length > 0 ? '/' : '')
-  
+
     packageObj = getKey(opfObj, 'package') || {}
     const metadataObj = (getKey(packageObj, 'metadata') || [])[0] || {}
 
@@ -107,13 +107,15 @@ module.exports = async ({ baseUri, log }) => {
           return true
         }
       })
-    } catch(ee) {}
+    } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+      return;
+    }
 
   } catch(e) {
 
     log(["ERROR: Bad opf.", e], 3)
     return {}
-    
+
   }
 
   try {
@@ -125,7 +127,7 @@ module.exports = async ({ baseUri, log }) => {
         path: normalizePath(`${opfDir}${opfManifestItemsByIdref[idref].$.href}`),
       }
     })
-    
+
   } catch(e) {
 
     log(["ERROR: Could not determine spines.", e], 3)
@@ -134,5 +136,5 @@ module.exports = async ({ baseUri, log }) => {
   }
 
   return info
-  
+
 }

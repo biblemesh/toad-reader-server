@@ -2,7 +2,6 @@ const fs = require('fs')
 const multiparty = require('multiparty')
 const admzip = require('adm-zip')
 const Jimp = require("jimp")
-const fetch = require('node-fetch')
 const { log } = require('../utils/logger')
 const mime = require('mime')
 const uuidv4 = require('uuid/v4')
@@ -28,7 +27,7 @@ if(baseTmpDir) {
   baseTmpDir = `${baseTmpDir}/`
 }
 
-module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
+module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP) {
 
   const deleteFolderRecursive = path => {
     log(['Delete folder', path], 2)
@@ -107,7 +106,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
     const results = await util.runQuery({
       queries: [
         'SELECT id FROM book_instance WHERE book_id=:bookId LIMIT 1',
-        'SELECT subscription_id FROM \`subscription-book\` WHERE book_id=:bookId LIMIT 1',
+        'SELECT subscription_id FROM `subscription-book` WHERE book_id=:bookId LIMIT 1',
       ],
       vars: {
         bookId,
@@ -174,7 +173,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
     await util.updateComputedBookAccess({ idpId: req.user.idpId, bookId: req.params.bookId, log })
 
     res.send({ success: true });
-          
+
   })
 
   // import book
@@ -219,9 +218,9 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
           const key = /^epub_content\/covers\//.test(relfilepath)
             ? relfilepath
             : `epub_content/book_${bookRow.id}/${relfilepath}`
-          
+
           log(['Upload file to S3', key])
-  
+
           await s3.putObject({
             Bucket: process.env.S3_BUCKET,
             Key: key,
@@ -229,10 +228,10 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
             ContentLength: body.byteCount,
             ContentType: mime.getType(key),
           }).promise()
-  
+
           log(['...uploaded to S3', key])
         }
-  
+
         const getEPUBFilePaths = path => {
           if(fs.existsSync(path)) {
             fs.readdirSync(path).forEach(file => {
@@ -245,14 +244,14 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
             })
           }
         }
-    
+
         const filename = file.originalFilename
 
         if(!filename) {
           throw new Error(`invalid_filename`)
         }
 
-        const priceMatch = filename.match(/\$([0-9]+)\.([0-9]{2})(\.[^\.]+)?$/)
+        const priceMatch = filename.match(/\$([0-9]+)\.([0-9]{2})(\.[^.]+)?$/)
         const epubSizeInMebibyte = Math.ceil(file.size/1024/1024)
 
         if(epubSizeInMebibyte > req.user.idpMaxMBPerBook) {
@@ -413,7 +412,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
             })
 
           }
-          
+
           return
         }
 
@@ -482,7 +481,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
 
           log([`INSERT ${numInsertsAtOnce} book_textnode_index rows from index ${i}...`], 2)
           await util.runQuery({
-            query: `INSERT INTO book_textnode_index (id, book_id, spineIdRef, text, hitIndex, context) VALUES ${chunk.map(x => `(?,?,?,?,?,?)`).join(',')}`,
+            query: `INSERT INTO book_textnode_index (id, book_id, spineIdRef, text, hitIndex, context) VALUES ${chunk.map(() => `(?,?,?,?,?,?)`).join(',')}`,
             vars: chunk.map(textnodeInfo => ([
               textnodeInfo.id,
               bookRow.id,
@@ -505,7 +504,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
 
           log([`INSERT ${numInsertsAtOnce} book_textnode_index_term rows from index ${i}...`], 2)
           await util.runQuery({
-            query: `INSERT INTO book_textnode_index_term (term, count, book_id) VALUES ${chunk.map(x => `(?,?,?)`).join(',')}`,
+            query: `INSERT INTO book_textnode_index_term (term, count, book_id) VALUES ${chunk.map(() => `(?,?,?)`).join(',')}`,
             vars: chunk.map(searchTerm => ([
               searchTerm,
               searchTermCounts[searchTerm],
@@ -556,14 +555,16 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
             `}`
           )
           res.end()
-        } catch(e) {}
+        } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+          return;
+        }
 
       } catch(err) {
 
         log(['Import book exception', err.message], 3)
-  
+
         // clean up...
-  
+
         try {
           if(cleanUpBookIdpToDelete) {
             await util.runQuery({
@@ -572,8 +573,10 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
               next,
             })
           }
-        } catch(err2) {}
-  
+        } catch(err) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+          return;
+        }
+
         try {
 
           if(bookRow) {
@@ -582,7 +585,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
           }
 
           deleteFolderRecursive(tmpDir)
-  
+
         } catch(err3) {
           log(['Error in responding to import error!', err3.message], 3)
         }
@@ -600,10 +603,10 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
           })
         }
       }
-  
+
     })
 
-    form.on('error', err => {
+    form.on('error', () => {
       res.status(400).send({ errorType: `bad_file` })
     })
 
@@ -622,6 +625,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
       await util.dieOnNoClassroomEditPermission({
         next,
         req,
+        res,
         log,
         classroomUid,
       })
@@ -674,7 +678,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
             Body: body,
             ContentLength: body.byteCount,
             ContentType: mime.getType(key),
-          }, (err, data) => {
+          }, (err) => {
             // clean up
             deleteFolderRecursive(tmpDir)
 
@@ -835,7 +839,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
       return
     }
 
-    bookRow = {
+    const bookRow = {
       ...req.body.book,
       epubSizeInMB: epubSizeInMebibyte,
       updated_at: util.timestampToMySQLDatetime()
@@ -1492,7 +1496,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
             {
               'eReader version': useEnhancedReaderOrAudiobook ? `Interactive eReader / Audiobooks` : `Standard eReader`,
               'Active users': numActiveUsers,
-              'Fee': `$${totalCostInCents}`.replace(/(..)$/, '\.$1'),
+              'Fee': `$${totalCostInCents}`.replace(/(..)$/, '.$1'),
             },
           ],
         })
@@ -1780,7 +1784,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
           `,
           `
             SELECT te.uid, te.text, te.updated_at, te.submitted_at, te.score,
-              t.name, t.toolType, t.isDiscussion, t.creatorType, t.spineIdRef, t.cfi, t.currently_published_tool_uid, 
+              t.name, t.toolType, t.isDiscussion, t.creatorType, t.spineIdRef, t.cfi, t.currently_published_tool_uid,
               c.name AS classroom_name, c.deleted_at AS classroom_deleted_at,
               b.id AS book_id, b.title, b.author
             FROM tool_engagement AS te

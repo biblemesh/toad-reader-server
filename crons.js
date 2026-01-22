@@ -14,7 +14,7 @@ const next = err => {
 const crons = async ({ forceRunAll }={}) => {
   await util.getValidConnection()
 
-  const day = new Date().getDay()  // 0-6
+  //const day = new Date().getDay()  // 0-6
   const hours = new Date().getHours()  // 0-23
   const minutes = new Date().getMinutes()  // 0-59
 
@@ -26,7 +26,7 @@ const crons = async ({ forceRunAll }={}) => {
   }
 
   if((hours === 0 && minutes === 0) || forceRunAll) {  // once per day
-    
+
   }
 
 }

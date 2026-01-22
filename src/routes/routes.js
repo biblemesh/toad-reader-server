@@ -1,5 +1,7 @@
-const { log } = require('../utils/logger')
+const { log } = require('../utils/logger');
 /* global requireRouter */
+
+// FIXME replace this manual router with modern Express.js router config
 
 module.exports = function (
   app,
@@ -8,7 +10,6 @@ module.exports = function (
   authFuncs,
   ensureAuthenticated,
   logIn,
-  log,
 ) {
   if (typeof requireRouter === 'undefined') {
     // for testing; it is difficult to mock the require function in this setup
@@ -183,7 +184,7 @@ module.exports = function (
   app.get(
     ['/src/js/widget_setup.js', '/scripts/widget_setup.js'],
     function (req, res) {
-      var staticFile = path.join(process.cwd(), req.url);
+      const staticFile = path.resolve('scripts/widget_setup.browser.js');
 
       if (fs.existsSync(staticFile)) {
         log(['Deliver static file', staticFile]);
@@ -191,6 +192,9 @@ module.exports = function (
           dotfiles: 'allow',
           cacheControl: false,
         });
+      } else {
+        log(['File not found', staticFile], 2);
+        res.status(404).send({ error: 'Not found' });
       }
     },
   );

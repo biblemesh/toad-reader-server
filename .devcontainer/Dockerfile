@@ -17,7 +17,7 @@ RUN \
   set -o nounset -o xtrace && \
   # Install dependencies for git. ssh enables commit signing
   install_packages ca-certificates ssh && \
-  # Prepare nodejs 16
+  # Prepare nodejs (version from .nvmrc)
   install_packages curl && \
   # Setup vscode https://github.com/microsoft/vscode/issues/189924
   install_packages locales && \
@@ -38,7 +38,7 @@ RUN \
   # nounset - Treat unset variables as an error when substituting
   # xtrace - Print commands and their arguments as they are executed
   set -o nounset -o xtrace && \
-  # Install nodejs 16
+  # Install nodejs (version from .nvmrc)
   bash -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh | bash" && \
   source ~/.bashrc && \
   # "source ~/.nvm/nvm.sh" fails if node isn't installed

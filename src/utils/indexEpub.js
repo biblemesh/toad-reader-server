@@ -4,7 +4,7 @@ const { log } = require('./logger')
 const { SPACE_OR_PUNCTUATION } = require("./util")
 const getEpubTextNodeDocuments = require("./getEpubTextNodeDocuments")
 
-const getIndexedBook = async ({ baseUri, spines, log }) => {
+const getIndexedBook = async ({ baseUri, spines }) => {
 
   const currentMiniSearch = new MiniSearch({
     idField: 'id',
@@ -23,7 +23,7 @@ const getIndexedBook = async ({ baseUri, spines, log }) => {
   let documentIndex = 0
   const searchTermCounts = {}
 
-  global.gc && global.gc()
+  if (global.gc) { global.gc(); }
 
   const mebibyte = 1024 * 1024
 
@@ -38,7 +38,7 @@ const getIndexedBook = async ({ baseUri, spines, log }) => {
       process.stdout.clearLine()
       process.stdout.cursorTo(0)
       process.stdout.write(`SearchIndexing: Parsing spine ${spineIndex} of ${spines.length}`)
-    } catch(e) {
+    } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
       // log([`SearchIndexing: Parsing spine ${spineIndex} of ${spines.length} (document index: ${documentIndex})`, `${parseInt(process.memoryUsage().rss / mebibyte)} MiB`])
     }
 
@@ -47,7 +47,7 @@ const getIndexedBook = async ({ baseUri, spines, log }) => {
       documentIndex = updatedDocumentIndex
       await currentMiniSearch.addAllAsync(documents)
 
-    } catch(e) {
+    } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
       log([`SearchIndexing: Spine not found when creating search index.`, spineItemPath], 3)
     }
 
@@ -63,7 +63,9 @@ const getIndexedBook = async ({ baseUri, spines, log }) => {
       try {
         process.stdout.clearLine()
         process.stdout.cursorTo(0)
-      } catch(e) {}
+      } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+        return;
+      }
       throw new Error(`Search indexing taking too long. Got through ${spineIndex} of ${spines.length} spines. Giving up: ${baseUri}`)
     }
 
@@ -77,7 +79,9 @@ const getIndexedBook = async ({ baseUri, spines, log }) => {
       try {
         process.stdout.clearLine()
         process.stdout.cursorTo(0)
-      } catch(e) {}
+      } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+        return;
+      }
 
       log(`Collect garbage as memory exceeding ${garbageCollectionThresholdInMebibyte} MiB (currently ~${memoryUsageInMebibyte} MiB)...`)
       global.gc()
@@ -88,7 +92,9 @@ const getIndexedBook = async ({ baseUri, spines, log }) => {
   try {
     process.stdout.clearLine()
     process.stdout.cursorTo(0)
-  } catch(e) {}
+  } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+    return;
+  }
 
   log(`SearchIndexing: parsing done // Current memory usage: ${parseInt(process.memoryUsage().rss / mebibyte)} MiB`)
   log(`SearchIndexing: converting to JSON...`)
@@ -111,6 +117,7 @@ const getIndexedBook = async ({ baseUri, spines, log }) => {
   }
 }
 
+/* FIXME these functions seem to be incomplete, so I removed them for now
 const getAutoSuggest = partialSearchStr => {
 
   // Do via MySQL
@@ -138,9 +145,10 @@ const searchBook = searchStr => {
   // )
 
 }
+*/
 
 module.exports = {
   getIndexedBook,
-  getAutoSuggest,
-  searchBook,
+  //getAutoSuggest,
+  //searchBook,
 }

@@ -29,7 +29,7 @@ const getSignedUrlAsync = params => new Promise((resolve, reject) => {
   })
 })
 
-module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthenticatedAndCheckIDPWithRedirect, log) {
+module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthenticatedAndCheckIDPWithRedirect) {
 
   const encodeURIComp = function(comp) {
     return encodeURIComponent(comp).replace(/%20/g, "+")
@@ -59,7 +59,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
     res.send(returnData);
   })
 
-  const sendSharePage = async ({ share_quote, note, title, author, coverHref, fullname, book_id, spineIdRef, cfi, language, domain, inIframe, req, res, next }) => {
+  const sendSharePage = async ({ share_quote, note, title, author, coverHref, fullname, book_id, spineIdRef, cfi, language, domain, inIframe, req, res }) => {
 
     if(!share_quote) {
       return res.send("Not found.")
@@ -67,7 +67,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
 
     const locale = language || req.idpLang || 'en'
 
-    const urlWithoutEditing = `${util.getProtocol({ req })}://${req.headers.host}${req.originalUrl.replace(/([\?&])editing=1&?/, '$1').replace(/iniframe=1&?/, '').replace(/[\?&]$/, '')}`
+    const urlWithoutEditing = `${util.getProtocol({ req })}://${req.headers.host}${req.originalUrl.replace(/([?&])editing=1&?/, '$1').replace(/iniframe=1&?/, '').replace(/[?&]$/, '')}`
 
     if(domain) {
       req.headers.host = util.getDataDomain({ domain })
@@ -160,7 +160,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
     (req, res, next) => {
 
       if(req.query.highlight) {
-        // If "creating" query parameter is present, then they can get rid of their name and/or note (and change their note?) 
+        // If "creating" query parameter is present, then they can get rid of their name and/or note (and change their note?)
 
         log(['Find book for share page', req.params.bookId]);
         global.connection.query('SELECT * FROM `book` WHERE id=?',
@@ -345,7 +345,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
           `)
 
           if(hasAccessToEnhancedTools) {
-  
+
             // classroom_schedule_date query
             queries.push(`
               SELECT csd.classroom_uid, csd.due_at, csdi.spineIdRef, csdi.label
@@ -385,7 +385,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
             if(hasAccessToEnhancedTools || isPublisher) {
 
               const toolsByUid = {}
-        
+
               // compile engagements under each tool, and answers under each engagement
               tools = tools.filter(tool => {
                 const { uid, toolType, isDiscussion, te_uid, tea_question_index, tea_choice_index } = tool
@@ -434,7 +434,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
                     }
                     toolEngagement.answers[parseInt(tea_question_index)] = parseInt(tea_choice_index)
                   }
-  
+
                 }
 
                 if(toolsByUid[uid] === tool) {
@@ -579,7 +579,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
               global.connection.query(
                 `INSERT INTO classroom SET ?`,
                 defaultClassroom,
-                (err, result) => {
+                (err) => {
                   if (err) return next(err);
 
                   classrooms.push(defaultClassroom);
@@ -766,7 +766,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
       return util.getLibrary({ req, res, next, log })
     },
   )
- 
+
   app.post('/addpushtoken', ensureAuthenticatedAndCheckIDP, async (req, res, next) => {
 
     if(!util.paramsOk(req.body, ['token'])) {
@@ -815,7 +815,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
 
   })
 
-  const getDeletionConfirmationCodeAndIdp = async (req, next) => {
+  const getDeletionConfirmationCodeAndIdp = async (req, res, next) => {
 
     const now = util.timestampToMySQLDatetime()
 
@@ -851,7 +851,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
       return
     }
 
-    const { idp, code } = await getDeletionConfirmationCodeAndIdp(req, next)
+    const { idp, code } = await getDeletionConfirmationCodeAndIdp(req, res, next)
     if(!code) return
 
     const locale = req.user.idpLang || 'en'
@@ -992,7 +992,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
         const response = await fetch(`https://amplitude.com/api/2/deletions/users`, options)
         if(response.status !== 200) throw new Error()
 
-      } catch(err) {
+      } catch(err) {  // eslint-disable-line @typescript-eslint/no-unused-vars
         log([`POST to amplitude to delete user data (userId: ${userToDelete.id}, idpId: ${userToDelete.idp_id}) failed`], 3)
       }
     }
