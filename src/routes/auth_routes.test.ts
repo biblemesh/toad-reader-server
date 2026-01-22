@@ -87,7 +87,9 @@ const setupSuccessfulMocks = (): void => {
   mockUtilFunctions.getIDPDomain.mockReturnValue('example.com');
   mockUtilFunctions.getDataDomain.mockReturnValue('data.example.com');
   mockUtilFunctions.getDataOrigin.mockReturnValue('https://data.example.com');
-  mockUtilFunctions.escapeHTML.mockImplementation((text: string) => text);
+  mockUtilFunctions.escapeHTML.mockImplementation((text: string) =>
+    text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'),
+  );
   mockUtilFunctions.isValidEmail.mockReturnValue(true);
   mockUtilFunctions.createAccessCode.mockReturnValue('123456');
   mockUtilFunctions.getLoginInfoByAccessCode.mockResolvedValue(null);
@@ -911,14 +913,18 @@ describe('auth_routes', () => {
       expect(response.text).toContain('https://example.com');
     });
 
-    it('should escape HTML in URLs for security', async () => {
-      mockUtilFunctions.escapeHTML.mockReturnValue(
-        '&lt;script&gt;alert(1)&lt;/script&gt;',
+    it('should call escapeHTML and output should be escaped', async () => {
+      // Test with a domain that could contain special characters
+      mockUtilFunctions.getFrontEndOrigin.mockReturnValue(
+        'https://example<test>.com',
       );
 
-      await request(app).get('/urls/example.com').expect(200);
+      const response = await request(app).get('/urls/example.com').expect(200);
 
       expect(mockUtilFunctions.escapeHTML).toHaveBeenCalled();
+      // Verify that the output contains escaped HTML (< should be &lt;)
+      expect(response.text).toContain('&lt;');
+      expect(response.text).toContain('&gt;');
     });
 
     it('should generate correct links for each environment', async () => {
