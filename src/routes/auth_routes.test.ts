@@ -57,11 +57,13 @@ const mockUtilFunctions = {
 
 const mockSendEmail = jest.fn();
 const mockI18n = jest.fn();
+const mockLog = jest.fn();
 
 jest.mock('../utils/util', () => mockUtilFunctions);
 jest.mock('../utils/sendEmail', () => mockSendEmail);
 jest.mock('inline-i18n', () => ({ i18n: mockI18n }));
 
+jest.mock('../utils/logger', () => ({ log: mockLog }));
 import authRoutes from './auth_routes.js';
 
 // ===== MOCK FACTORY FUNCTIONS =====
@@ -93,7 +95,9 @@ const setupSuccessfulMocks = (): void => {
   mockUtilFunctions.getUserInfo.mockResolvedValue(createMockUser());
   mockUtilFunctions.updateUserInfo.mockResolvedValue(createMockUser());
   mockUtilFunctions.runQuery.mockResolvedValue([]);
-  mockUtilFunctions.timestampToMySQLDatetime.mockReturnValue('2022-01-01 00:00:00');
+  mockUtilFunctions.timestampToMySQLDatetime.mockReturnValue(
+    '2022-01-01 00:00:00',
+  );
   mockUtilFunctions.setIdpLang.mockImplementation(
     () => (_req: Request, _res: Response, next: NextFunction) => {
       (_req as RequestWithUser).idpLang = 'en';
@@ -116,9 +120,15 @@ const setupSuccessfulMocks = (): void => {
 
 const setupFailureMocks = {
   databaseError: (): void => {
-    mockUtilFunctions.runQuery.mockRejectedValue(new Error('Database connection failed'));
+    mockUtilFunctions.runQuery.mockRejectedValue(
+      new Error('Database connection failed'),
+    );
     global.connection.query.mockImplementation(
-      (_query: string, _params: unknown, callback: (err: Error | null) => void) => {
+      (
+        _query: string,
+        _params: unknown,
+        callback: (err: Error | null) => void,
+      ) => {
         callback(new Error('Database connection failed'));
       },
     );
@@ -154,13 +164,18 @@ const setupFailureMocks = {
   },
 
   deviceLoginLimitExceeded: (limit: number): void => {
-    const sessions = Array.from({ length: limit + 2 }, (_, i) => `session${i + 1}`);
+    const sessions = Array.from(
+      { length: limit + 2 },
+      (_, i) => `session${i + 1}`,
+    );
     mockUtilFunctions.sessionStore.get.mockImplementation(
       (_id: string, callback: (err: Error | null, value: string) => void) => {
         callback(null, JSON.stringify(sessions));
       },
     );
-    mockUtilFunctions.runQuery.mockResolvedValue([{ id: 1, deviceLoginLimit: limit }]);
+    mockUtilFunctions.runQuery.mockResolvedValue([
+      { id: 1, deviceLoginLimit: limit },
+    ]);
   },
 };
 
@@ -208,10 +223,12 @@ const setupPassportAuthenticate = (
 // ===== TEST SUITE =====
 describe('auth_routes', () => {
   let app: Express;
-  let mockAuthFuncs: Record<string, { logout: jest.Mock; getMetaData: jest.Mock }>;
+  let mockAuthFuncs: Record<
+    string,
+    { logout: jest.Mock; getMetaData: jest.Mock }
+  >;
   let mockEnsureAuthenticated: jest.Mock;
   let mockLogIn: jest.Mock;
-  let mockLog: jest.Mock;
 
   beforeEach(() => {
     // Reset all mocks and set up successful defaults
@@ -234,25 +251,44 @@ describe('auth_routes', () => {
     };
     mockEnsureAuthenticated = jest.fn();
     mockLogIn = jest.fn();
-    mockLog = jest.fn();
 
     global.connection = {
-      query: jest.fn((query: string, params: unknown, callback?: (err: Error | null, results: unknown[]) => void) => {
-        const mockIDP = { id: 1, domain: 'example.com', userInfoEndpoint: null, deviceLoginLimit: null };
-        if (typeof params === 'function') {
-          const cb = params as (err: Error | null, results: unknown[]) => void;
-          cb(null, [mockIDP]);
-        } else if (callback) {
-          callback(null, [mockIDP]);
-        }
-      }),
+      query: jest.fn(
+        (
+          query: string,
+          params: unknown,
+          callback?: (err: Error | null, results: unknown[]) => void,
+        ) => {
+          const mockIDP = {
+            id: 1,
+            domain: 'example.com',
+            userInfoEndpoint: null,
+            deviceLoginLimit: null,
+          };
+          if (typeof params === 'function') {
+            const cb = params as (
+              err: Error | null,
+              results: unknown[],
+            ) => void;
+            cb(null, [mockIDP]);
+          } else if (callback) {
+            callback(null, [mockIDP]);
+          }
+        },
+      ),
     };
 
     // Mock process.env
     process.env.LOGIN_TEST_EMAIL = 'test@example.com';
     process.env.LOGIN_TEST_CODE = 'TEST123';
 
-    authRoutes(app, passport, mockAuthFuncs, mockEnsureAuthenticated, mockLogIn, mockLog);
+    authRoutes(
+      app,
+      passport,
+      mockAuthFuncs,
+      mockEnsureAuthenticated,
+      mockLogIn,
+    );
   });
 
   afterEach(() => {
@@ -346,7 +382,7 @@ describe('auth_routes', () => {
       expect(response.text).toContain('<html>');
       expect(response.text).toContain('<script>');
       expect(response.text).toContain('window.ReactNativeWebView.postMessage');
-      expect(response.text).toContain('"sendCookiePlus"');
+      expect(response.text).toContain("'sendCookiePlus'");
       expect(response.text).toContain('"id":1');
       expect(response.text).toContain('"fullname":"John Doe"');
     });
@@ -1326,12 +1362,25 @@ describe('auth_routes', () => {
     });
 
     it('should handle IDP with userInfoEndpoint', async () => {
-      mockUtilFunctions.runQuery.mockResolvedValue([{ user_id_from_idp: 'external123' }]);
+      mockUtilFunctions.runQuery.mockResolvedValue([
+        { user_id_from_idp: 'external123' },
+      ]);
       mockUtilFunctions.getUserInfo.mockResolvedValue(createMockUser());
 
       global.connection.query.mockImplementation(
-        (_query: string, _params: unknown, callback: (err: Error | null, results: unknown[]) => void) => {
-          callback(null, [{ id: 1, domain: 'example.com', userInfoEndpoint: 'https://idp.example.com/userinfo', deviceLoginLimit: null }]);
+        (
+          _query: string,
+          _params: unknown,
+          callback: (err: Error | null, results: unknown[]) => void,
+        ) => {
+          callback(null, [
+            {
+              id: 1,
+              domain: 'example.com',
+              userInfoEndpoint: 'https://idp.example.com/userinfo',
+              deviceLoginLimit: null,
+            },
+          ]);
         },
       );
 
@@ -1358,8 +1407,19 @@ describe('auth_routes', () => {
       mockUtilFunctions.getUserInfo.mockResolvedValue(createMockUser());
 
       global.connection.query.mockImplementation(
-        (_query: string, _params: unknown, callback: (err: Error | null, results: unknown[]) => void) => {
-          callback(null, [{ id: 1, domain: 'example.com', userInfoEndpoint: 'https://idp.example.com/userinfo', deviceLoginLimit: null }]);
+        (
+          _query: string,
+          _params: unknown,
+          callback: (err: Error | null, results: unknown[]) => void,
+        ) => {
+          callback(null, [
+            {
+              id: 1,
+              domain: 'example.com',
+              userInfoEndpoint: 'https://idp.example.com/userinfo',
+              deviceLoginLimit: null,
+            },
+          ]);
         },
       );
 
@@ -1404,8 +1464,19 @@ describe('auth_routes', () => {
 
     it('should handle device login limit during login', async () => {
       global.connection.query.mockImplementation(
-        (_query: string, _params: unknown, callback: (err: Error | null, results: unknown[]) => void) => {
-          callback(null, [{ id: 1, domain: 'example.com', userInfoEndpoint: null, deviceLoginLimit: 2 }]);
+        (
+          _query: string,
+          _params: unknown,
+          callback: (err: Error | null, results: unknown[]) => void,
+        ) => {
+          callback(null, [
+            {
+              id: 1,
+              domain: 'example.com',
+              userInfoEndpoint: null,
+              deviceLoginLimit: 2,
+            },
+          ]);
         },
       );
 
