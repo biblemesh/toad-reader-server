@@ -1,57 +1,55 @@
-const AWS = require('aws-sdk')
-const { log } = require('./logger')
+const AWS = require('aws-sdk');
+const { log } = require('./logger');
 
 // SES setup
 const sesConfig = {
   region: process.env.SES_AWS_REGION || 'us-east-1',
+};
+if (process.env.SES_ACCESS_KEY_ID && process.env.SES_SECRET_ACCESS_KEY) {
+  sesConfig.accessKeyId = process.env.SES_ACCESS_KEY_ID;
+  sesConfig.secretAccessKey = process.env.SES_SECRET_ACCESS_KEY;
 }
-if(process.env.SES_ACCESS_KEY_ID && process.env.SES_SECRET_ACCESS_KEY) {
-  sesConfig.accessKeyId = process.env.SES_ACCESS_KEY_ID
-  sesConfig.secretAccessKey = process.env.SES_SECRET_ACCESS_KEY
-}
-const SES = new AWS.SES(sesConfig)
-
+const SES = new AWS.SES(sesConfig);
 
 const executeSendEmail = ({ queuedEmail, resolve, reject }) => {
+  const { toAddrs, ccAddrs, bccAddrs, fromAddr, replyToAddrs, subject, body } =
+    queuedEmail;
 
-  const { toAddrs, ccAddrs, bccAddrs, fromAddr, replyToAddrs, subject, body } = queuedEmail
-
-  SES.sendEmail({
-    Destination: {
-      ToAddresses: toAddrs,
-      CcAddresses: ccAddrs,
-      BccAddresses: bccAddrs,
-    },
-    Message: {
-      Body: {
-        Html: {
-          Charset: "UTF-8",
-          Data: body,
+  SES.sendEmail(
+    {
+      Destination: {
+        ToAddresses: toAddrs,
+        CcAddresses: ccAddrs,
+        BccAddresses: bccAddrs,
+      },
+      Message: {
+        Body: {
+          Html: {
+            Charset: 'UTF-8',
+            Data: body,
+          },
+        },
+        Subject: {
+          Charset: 'UTF-8',
+          Data: subject,
         },
       },
-      Subject: {
-        Charset: "UTF-8",
-        Data: subject,
+      Source: fromAddr,
+      ReplyToAddresses: replyToAddrs,
+    },
+    async (err) => {
+      try {
+        if (err) {
+          log(['Email error: ', err, JSON.stringify(queuedEmail)], 3);
+          reject(err.message || 'email send failed');
+        }
+
+        resolve(true);
+      } catch (err) {
+        reject(err.message || 'email send failed');
       }
     },
-    Source: fromAddr,
-    ReplyToAddresses: replyToAddrs,
-  }, async (err) => {
+  );
+};
 
-    try {
-
-      if(err) {
-        log(['Email error: ', err, JSON.stringify(queuedEmail)], 3)
-        reject(err.message || 'email send failed')
-      }
-
-      resolve(true)
-
-    } catch(err) {
-      reject(err.message || 'email send failed')
-    }
-
-  })
-}
-
-module.exports = executeSendEmail
+module.exports = executeSendEmail;
