@@ -7,14 +7,29 @@ import * as setupRoutes from './routes';
 
 // Prevent further routers from being loaded
 global.requireRouter = jest.fn().mockReturnValue(jest.fn());
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(global as any).log = jest.fn();
 
 jest.mock('express-mysql-session', () => () => jest.fn());
 
 describe('base router', () => {
   const app = express();
 
+  // Set environment variables for S3 development mode
+  process.env.USE_DEVELOPMENT_S3 = 'true';
+  process.env.S3_BUCKET = 'test-bucket';
+
   const s3 = {
-    getObject: (params, callback) => callback(null, { Body: 'foo bar baz' }),
+    send: jest.fn().mockResolvedValue({
+      Body: {
+        [Symbol.asyncIterator]: async function* () {
+          yield Buffer.from('foo bar baz');
+        },
+      },
+      LastModified: new Date(),
+      ContentLength: 11,
+      ETag: '"test-etag"',
+    }),
   };
   const authFuncs = jest.fn();
   const ensureAuthenticated = jest.fn();
@@ -39,6 +54,17 @@ describe('base router', () => {
     ensureAuthenticated.mockImplementation((req, res, next) => {
       req.hasInitialCookiePathForEmbed = true;
       return next();
+    });
+    // Re-mock s3.send since jest.resetAllMocks() clears it between tests
+    s3.send.mockResolvedValue({
+      Body: {
+        [Symbol.asyncIterator]: async function* () {
+          yield Buffer.from('foo bar baz');
+        },
+      },
+      LastModified: new Date(),
+      ContentLength: 11,
+      ETag: '"test-etag"',
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (util as any).hasAccess = jest.fn().mockReturnValue(true);
