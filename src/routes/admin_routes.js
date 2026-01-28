@@ -10,6 +10,13 @@ const mm = require('music-metadata');
 const util = require('../utils/util');
 const parseEpub = require('../utils/parseEpub');
 const { getIndexedBook } = require('../utils/indexEpub');
+const {
+  s3,
+  ListObjectsCommand,
+  DeleteObjectsCommand,
+  PutObjectCommand,
+  GetObjectAttributesCommand,
+} = require('../utils/util');
 
 const MAX_AUDIOBOOK_FILE_MEBIBYTE = 50; // over an hour, on average
 const MAX_AUDIOBOOK_MEBIBYTE = 750;
@@ -27,7 +34,7 @@ if (baseTmpDir) {
   baseTmpDir = `${baseTmpDir}/`;
 }
 
-module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP) {
+module.exports = function (app, ensureAuthenticatedAndCheckIDP) {
   const deleteFolderRecursive = (path) => {
     log(['Delete folder', path], 2);
     if (fs.existsSync(path)) {
@@ -47,12 +54,12 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP) {
 
   const emptyS3Folder = async (Prefix) => {
     log(['Empty S3 folder', Prefix], 2);
-    const data = await s3
-      .listObjects({
+    const data = await s3.send(
+      new ListObjectsCommand({
         Bucket: process.env.S3_BUCKET,
         Prefix,
-      })
-      .promise();
+      }),
+    );
 
     if (data.Contents.length == 0) return;
 
@@ -69,7 +76,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP) {
     });
 
     if (delParams.Delete.Objects.length > 0) {
-      await s3.deleteObjects(delParams).promise();
+      await s3.send(new DeleteObjectsCommand(delParams));
       if (overfull) {
         await emptyS3Folder(Prefix);
       }
@@ -233,15 +240,15 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP) {
 
             log(['Upload file to S3', key]);
 
-            await s3
-              .putObject({
+            await s3.send(
+              new PutObjectCommand({
                 Bucket: process.env.S3_BUCKET,
                 Key: key,
                 Body: body,
                 ContentLength: body.byteCount,
                 ContentType: mime.getType(key),
-              })
-              .promise();
+              }),
+            );
 
             log(['...uploaded to S3', key]);
           };
@@ -708,54 +715,57 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP) {
 
         let processedOneFile = false; // at this point, we only allow one upload at a time
 
-        form.on('file', (name, file) => {
+        form.on('file', async (name, file) => {
           if (processedOneFile) return;
           processedOneFile = true;
 
-          const filename = file.originalFilename
-            .replace(/[^a-z0-9._-]/gi, '')
-            .replace(/(\.[^.]+)$/gi, `-${Date.now()}$1`);
+          try {
+            const filename = file.originalFilename
+              .replace(/[^a-z0-9._-]/gi, '')
+              .replace(/(\.[^.]+)$/gi, `-${Date.now()}$1`);
 
-          if (!filename || !/-[0-9]+\.[^.]+$/.test(filename)) {
-            deleteFolderRecursive(tmpDir);
-            res.status(400).send({ errorType: 'invalid_filename' });
-            return;
-          }
-
-          const fileSizeInMebibyte = Math.ceil(file.size / 1024 / 1024);
-
-          if (fileSizeInMebibyte > req.user.idpMaxMBPerFile) {
-            res.status(400).send({
-              errorType: 'file_too_large',
-              maxMB: req.user.idpMaxMBPerFile,
-            });
-            return;
-          }
-
-          const body = fs.createReadStream(file.path);
-
-          const key = 'enhanced_assets/' + classroomUid + '/' + filename;
-          log(['Upload file to S3', key]);
-          s3.putObject(
-            {
-              Bucket: process.env.S3_BUCKET,
-              Key: key,
-              Body: body,
-              ContentLength: body.byteCount,
-              ContentType: mime.getType(key),
-            },
-            (err) => {
-              // clean up
+            if (!filename || !/-[0-9]+\.[^.]+$/.test(filename)) {
               deleteFolderRecursive(tmpDir);
+              res.status(400).send({ errorType: 'invalid_filename' });
+              return;
+            }
 
-              if (err) return next(err);
+            const fileSizeInMebibyte = Math.ceil(file.size / 1024 / 1024);
 
-              res.send({
-                success: true,
-                filename,
+            if (fileSizeInMebibyte > req.user.idpMaxMBPerFile) {
+              res.status(400).send({
+                errorType: 'file_too_large',
+                maxMB: req.user.idpMaxMBPerFile,
               });
-            },
-          );
+              return;
+            }
+
+            const body = fs.createReadStream(file.path);
+
+            const key = 'enhanced_assets/' + classroomUid + '/' + filename;
+            log(['Upload file to S3', key]);
+            await s3.send(
+              new PutObjectCommand({
+                Bucket: process.env.S3_BUCKET,
+                Key: key,
+                Body: body,
+                ContentLength: body.byteCount,
+                ContentType: mime.getType(key),
+              }),
+            );
+
+            // clean up
+            deleteFolderRecursive(tmpDir);
+
+            res.send({
+              success: true,
+              filename,
+            });
+          } catch (err) {
+            // clean up
+            deleteFolderRecursive(tmpDir);
+            return next(err);
+          }
         });
 
         form.on('error', (err) => {
@@ -885,13 +895,13 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP) {
     let epubSizeInMebibyte = 0;
     await Promise.all(
       req.body.book.audiobookInfo.spines.map(async ({ filename }) => {
-        const data = await s3
-          .getObjectAttributes({
+        const data = await s3.send(
+          new GetObjectAttributesCommand({
             Bucket: process.env.S3_BUCKET,
             Key: `epub_content/book_${req.body.book.id}/${filename}`,
             ObjectAttributes: [`ObjectSize`],
-          })
-          .promise();
+          }),
+        );
         epubSizeInMebibyte += data.ObjectSize / 1024 / 1024;
       }),
     );
@@ -1056,15 +1066,15 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP) {
 
           log(['Upload audiobook file to S3', key]);
 
-          await s3
-            .putObject({
+          await s3.send(
+            new PutObjectCommand({
               Bucket: process.env.S3_BUCKET,
               Key: key,
               Body: body,
               ContentLength: body.byteCount,
               ContentType: mime.getType(key),
-            })
-            .promise();
+            }),
+          );
 
           log(['...uploaded audiobook file to S3', key]);
 

@@ -1,4 +1,5 @@
 const { log } = require('../utils/logger');
+const { GetObjectCommand } = require('@aws-sdk/client-s3');
 /* global requireRouter */
 
 // FIXME replace this manual router with modern Express.js router config
@@ -67,7 +68,7 @@ module.exports = function (
     log,
   );
   requireRouter('./api_routes')(app, log);
-  requireRouter('./admin_routes')(app, s3, ensureAuthenticatedAndCheckIDP, log);
+  requireRouter('./admin_routes')(app, ensureAuthenticatedAndCheckIDP, log);
   requireRouter('./user_routes')(
     app,
     ensureAuthenticatedAndCheckIDP,
@@ -124,13 +125,40 @@ module.exports = function (
     }
 
     log(['Get S3 object', params.Key]);
-    s3.getObject(params, function (err, data) {
-      if (err) {
+    (async () => {
+      try {
+        const { Body, LastModified, ContentLength, ETag } = await s3.send(
+          new GetObjectCommand(params),
+        );
+
+        // Body is a ReadableStream in v3, need to convert to Buffer
+        const chunks = [];
+        for await (const chunk of Body) {
+          chunks.push(chunk);
+        }
+        const buffer = Buffer.concat(chunks);
+
+        log('Deliver S3 object');
+
+        const responseHeaders = {
+          'Last-Modified': LastModified,
+          'Content-Length': ContentLength,
+          'Content-Type': mime.getType(urlWithoutQuery),
+          ETag: ETag,
+        };
+
+        if (req.query.filename) {
+          responseHeaders['Content-Disposition'] =
+            `attachment; filename=${req.query.filename}`;
+        }
+
+        res.set(responseHeaders).send(buffer);
+      } catch (err) {
         if (!tryWithoutDecode) {
           return getAssetFromS3(req, res, next, notFoundCallback, true);
         }
 
-        if (err.statusCode == 304) {
+        if (err.statusCode == 304 || err.$metadata?.httpStatusCode == 304) {
           const responseHeaders = {
             ETag: req.headers['if-none-match'],
             'Last-Modified': req.headers['if-modified-since'],
@@ -150,24 +178,8 @@ module.exports = function (
           log(['S3 file not found', params.Key], 2);
           res.status(404).send({ error: 'Not found' });
         }
-      } else {
-        log('Deliver S3 object');
-
-        const responseHeaders = {
-          'Last-Modified': data.LastModified,
-          'Content-Length': data.ContentLength,
-          'Content-Type': mime.getType(urlWithoutQuery),
-          ETag: data.ETag,
-        };
-
-        if (req.query.filename) {
-          responseHeaders['Content-Disposition'] =
-            `attachment; filename=${req.query.filename}`;
-        }
-
-        res.set(responseHeaders).send(Buffer.from(data.Body));
       }
-    });
+    })();
   };
 
   // serve the cover images for dev
