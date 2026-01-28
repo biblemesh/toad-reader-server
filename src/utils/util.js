@@ -2,7 +2,16 @@ const moment = require('moment');
 const jwt = require('jsonwebtoken');
 const fetch = require('node-fetch');
 const { i18n } = require('inline-i18n');
-const AWS = require('aws-sdk');
+const {
+  S3Client,
+  GetObjectCommand,
+  PutObjectCommand,
+  ListObjectsCommand,
+  ListObjectsV2Command,
+  DeleteObjectsCommand,
+  CopyObjectCommand,
+  GetObjectAttributesCommand,
+} = require('@aws-sdk/client-s3');
 const cookie = require('cookie-signature');
 const md5 = require('md5');
 const useragent = require('useragent');
@@ -18,15 +27,16 @@ const API_VERSION = '1.0';
 
 const s3Config = {};
 if (process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY) {
-  s3Config.accessKeyId = process.env.S3_ACCESS_KEY_ID;
-  s3Config.secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
+  s3Config.credentials = {
+    accessKeyId: process.env.S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+  };
 }
 if (process.env.USE_DEVELOPMENT_S3) {
   s3Config.endpoint = process.env.S3_ENDPOINT;
-  s3Config.s3BucketEndpoint = true;
-  s3Config.s3ForcePathStyle = true;
+  s3Config.forcePathStyle = true;
 }
-const s3 = new AWS.S3(s3Config);
+const s3 = new S3Client(s3Config);
 
 const mySqlSessionOptions = {
   host: process.env.OVERRIDE_DATABASE_HOSTNAME || process.env.DATABASE_HOSTNAME,
@@ -1779,24 +1789,24 @@ const util = {
 
     while (isFirstTimeOrTruncated) {
       // plan, list through the source, if got continuation token, recursive
-      const listResponse = await s3
-        .listObjectsV2({
+      const listResponse = await s3.send(
+        new ListObjectsV2Command({
           Bucket,
           Prefix: source,
           ContinuationToken,
-        })
-        .promise();
+        }),
+      );
 
       // copy objects
       await Promise.all(
         listResponse.Contents.map(async ({ Key }) => {
-          await s3
-            .copyObject({
+          await s3.send(
+            new CopyObjectCommand({
               Bucket,
               CopySource: `${Bucket}/${Key}`,
               Key: `${destination}${Key.replace(listResponse.Prefix, '')}`,
-            })
-            .promise();
+            }),
+          );
         }),
       );
 
@@ -2136,3 +2146,12 @@ const util = {
 };
 
 module.exports = util;
+module.exports.s3 = s3;
+module.exports.S3Client = S3Client;
+module.exports.GetObjectCommand = GetObjectCommand;
+module.exports.PutObjectCommand = PutObjectCommand;
+module.exports.ListObjectsCommand = ListObjectsCommand;
+module.exports.ListObjectsV2Command = ListObjectsV2Command;
+module.exports.DeleteObjectsCommand = DeleteObjectsCommand;
+module.exports.CopyObjectCommand = CopyObjectCommand;
+module.exports.GetObjectAttributesCommand = GetObjectAttributesCommand;
