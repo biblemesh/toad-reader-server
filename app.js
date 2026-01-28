@@ -6,7 +6,6 @@ const express = require('express')
 const cors = require('cors')
 const app = express()
 const http = require('http')
-// const serverless = require("serverless-http")
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const passport = require('passport')
@@ -730,17 +729,3 @@ process.on('unhandledRejection', reason => {
 // Classic server
 
 server.listen(port)
-
-// Serverless
-
-/*
-// Local listener
-if(!!process.env.IS_DEV) {
-  app.listen(port, (err) => {
-    if (err) throw err
-    log(['> Ready on http://localhost:8081'])
-  })
-}
-
-module.exports.handler = serverless(app)
-*/
