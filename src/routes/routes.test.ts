@@ -20,16 +20,7 @@ describe('base router', () => {
   process.env.S3_BUCKET = 'test-bucket';
 
   const s3 = {
-    send: jest.fn().mockResolvedValue({
-      Body: {
-        [Symbol.asyncIterator]: async function* () {
-          yield Buffer.from('foo bar baz');
-        },
-      },
-      LastModified: new Date(),
-      ContentLength: 11,
-      ETag: '"test-etag"',
-    }),
+    send: jest.fn(),
   };
   const authFuncs = jest.fn();
   const ensureAuthenticated = jest.fn();
