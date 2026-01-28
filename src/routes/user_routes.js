@@ -1,7 +1,10 @@
 const path = require('path');
 const fs = require('fs');
 const { i18n } = require('inline-i18n');
-const AWS = require('aws-sdk');
+const {
+  getSignedCookies,
+  getSignedUrl,
+} = require('@aws-sdk/cloudfront-signer');
 const crypto = require('crypto');
 const fetch = require('node-fetch');
 const jwt = require('jsonwebtoken');
@@ -10,28 +13,11 @@ const { log } = require('../utils/logger');
 const util = require('../utils/util');
 const sendEmail = require('../utils/sendEmail');
 
-const cloudFront = process.env.IS_DEV
-  ? null
-  : new AWS.CloudFront.Signer(
-      process.env.CLOUDFRONT_KEY_PAIR_ID,
-      process.env.CLOUDFRONT_PRIVATE_KEY.replace(/\\n/g, '\n'),
-    );
-
-const getSignedCookieAsync = (params) =>
-  new Promise((resolve, reject) => {
-    cloudFront.getSignedCookie(params, (err, data) => {
-      if (err) return reject(err);
-      resolve(data);
-    });
-  });
-
-const getSignedUrlAsync = (params) =>
-  new Promise((resolve, reject) => {
-    cloudFront.getSignedUrl(params, (err, data) => {
-      if (err) return reject(err);
-      resolve(data);
-    });
-  });
+const cloudFrontKeyPairId = process.env.CLOUDFRONT_KEY_PAIR_ID;
+const cloudFrontPrivateKey = process.env.CLOUDFRONT_PRIVATE_KEY?.replace(
+  /\\n/g,
+  '\n',
+);
 
 module.exports = function (
   app,
@@ -714,22 +700,16 @@ module.exports = function (
       }
 
       // Get the cookie
-      const policy = JSON.stringify({
-        Statement: [
-          {
-            Resource: `${util.getFrontEndOrigin({ req })}/epub_content/book_${bookId}/*`,
-            Condition: {
-              DateLessThan: {
-                'AWS:EpochTime': Math.floor(Date.now() / 1000) + 60 * 60 * 24, // in seconds (not ms)
-              },
-            },
-          },
-        ],
-      });
-
       try {
-        const cookies = await getSignedCookieAsync({
-          policy,
+        const dateLessThan = new Date(
+          Date.now() + 60 * 60 * 24 * 1000,
+        ).toISOString();
+
+        const cookies = getSignedCookies({
+          url: `${util.getFrontEndOrigin({ req })}/epub_content/book_${bookId}/*`,
+          keyPairId: cloudFrontKeyPairId,
+          privateKey: cloudFrontPrivateKey,
+          dateLessThan,
         });
 
         res.send(cookies);
@@ -776,24 +756,17 @@ module.exports = function (
 
       const url = `${util.getFrontEndOrigin({ req })}/enhanced_assets/${classroomUid}/*`;
 
-      // Get the cookie
-      const policy = JSON.stringify({
-        Statement: [
-          {
-            Resource: url,
-            Condition: {
-              DateLessThan: {
-                'AWS:EpochTime': Math.floor(Date.now() / 1000) + 60 * 60 * 24, // in seconds (not ms)
-              },
-            },
-          },
-        ],
-      });
-
+      // Get the signed URL
       try {
-        const signedUrl = await getSignedUrlAsync({
-          policy,
+        const dateLessThan = new Date(
+          Date.now() + 60 * 60 * 24 * 1000,
+        ).toISOString();
+
+        const signedUrl = getSignedUrl({
           url,
+          keyPairId: cloudFrontKeyPairId,
+          privateKey: cloudFrontPrivateKey,
+          dateLessThan,
         });
 
         res.send({ queryString: `?${signedUrl.split('?')[1]}` });
