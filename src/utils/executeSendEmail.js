@@ -17,38 +17,35 @@ const executeSendEmail = ({ queuedEmail, resolve, reject }) => {
   const { toAddrs, ccAddrs, bccAddrs, fromAddr, replyToAddrs, subject, body } =
     queuedEmail;
 
-  (async () => {
-    try {
-      await sesClient.send(
-        new SendEmailCommand({
-          Destination: {
-            ToAddresses: toAddrs,
-            CcAddresses: ccAddrs,
-            BccAddresses: bccAddrs,
+  sesClient.send(
+    new SendEmailCommand({
+      Destination: {
+        ToAddresses: toAddrs,
+        CcAddresses: ccAddrs,
+        BccAddresses: bccAddrs,
+      },
+      Message: {
+        Body: {
+          Html: {
+            Charset: 'UTF-8',
+            Data: body,
           },
-          Message: {
-            Body: {
-              Html: {
-                Charset: 'UTF-8',
-                Data: body,
-              },
-            },
-            Subject: {
-              Charset: 'UTF-8',
-              Data: subject,
-            },
-          },
-          Source: fromAddr,
-          ReplyToAddresses: replyToAddrs,
-        }),
-      );
-
-      resolve(true);
-    } catch (err) {
-      log(['Email error: ', err, JSON.stringify(queuedEmail)], 3);
-      reject(err.message || 'email send failed');
-    }
-  })();
+        },
+        Subject: {
+          Charset: 'UTF-8',
+          Data: subject,
+        },
+      },
+      Source: fromAddr,
+      ReplyToAddresses: replyToAddrs,
+    }).then(
+      () => resolve(true),
+      (err) => {
+        log(['Email error: ', err, JSON.stringify(queuedEmail)], 3);
+        reject(err.message || 'email send failed');
+      },
+    ),
+  );
 };
 
 module.exports = executeSendEmail;

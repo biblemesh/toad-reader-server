@@ -125,35 +125,8 @@ module.exports = function (
     }
 
     log(['Get S3 object', params.Key]);
-    (async () => {
-      try {
-        const { Body, LastModified, ContentLength, ETag } = await s3.send(
-          new GetObjectCommand(params),
-        );
-
-        // Body is a ReadableStream in v3, need to convert to Buffer
-        const chunks = [];
-        for await (const chunk of Body) {
-          chunks.push(chunk);
-        }
-        const buffer = Buffer.concat(chunks);
-
-        log('Deliver S3 object');
-
-        const responseHeaders = {
-          'Last-Modified': LastModified,
-          'Content-Length': ContentLength,
-          'Content-Type': mime.getType(urlWithoutQuery),
-          ETag: ETag,
-        };
-
-        if (req.query.filename) {
-          responseHeaders['Content-Disposition'] =
-            `attachment; filename=${req.query.filename}`;
-        }
-
-        res.set(responseHeaders).send(buffer);
-      } catch (err) {
+    s3.send(new GetObjectCommand(params))
+      .catch((err) => {
         if (!tryWithoutDecode) {
           return getAssetFromS3(req, res, next, notFoundCallback, true);
         }
@@ -178,8 +151,31 @@ module.exports = function (
           log(['S3 file not found', params.Key], 2);
           res.status(404).send({ error: 'Not found' });
         }
-      }
-    })();
+      })
+      .then(async ({ Body, LastModified, ContentLength, ETag }) => {
+        // Body is a ReadableStream in v3, need to convert to Buffer
+        const chunks = [];
+        for await (const chunk of Body) {
+          chunks.push(chunk);
+        }
+        const buffer = Buffer.concat(chunks);
+
+        log('Deliver S3 object');
+
+        const responseHeaders = {
+          'Last-Modified': LastModified,
+          'Content-Length': ContentLength,
+          'Content-Type': mime.getType(urlWithoutQuery),
+          ETag: ETag,
+        };
+
+        if (req.query.filename) {
+          responseHeaders['Content-Disposition'] =
+            `attachment; filename=${req.query.filename}`;
+        }
+
+        res.set(responseHeaders).send(buffer);
+      });
   };
 
   // serve the cover images for dev
