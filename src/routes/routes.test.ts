@@ -19,14 +19,13 @@ describe('base router', () => {
   process.env.USE_DEVELOPMENT_S3 = 'true';
   process.env.S3_BUCKET = 'test-bucket';
 
-  const s3 = {
-    send: jest.fn(),
-  };
+  const s3 = util.s3 as (typeof util.s3) & { send: jest.Mock };
+  s3.send = jest.fn();
   const authFuncs = jest.fn();
   const ensureAuthenticated = jest.fn();
   const logIn = jest.fn();
 
-  setupRoutes(app, s3, passport, authFuncs, ensureAuthenticated, logIn);
+  setupRoutes(app, passport, authFuncs, ensureAuthenticated, logIn);
 
   afterEach(() => {
     jest.resetAllMocks();

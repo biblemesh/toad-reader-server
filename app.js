@@ -67,8 +67,6 @@ app.use(cors(corsOptionsDelegate))
 
 ////////////// SETUP STORAGE AND DB //////////////
 
-const s3 = util.s3
-
 // ensure db connection for initial tasks
 readyPromises.push(util.getValidConnection())
 
@@ -717,7 +715,7 @@ app.use('*', function(req, res, next) {
   }
 })
 
-require('./src/routes/routes')(app, s3, passport, authFuncs, ensureAuthenticated, logIn, log)
+require('./src/routes/routes')(app, passport, authFuncs, ensureAuthenticated, logIn, log)
 
 Sentry.setupExpressErrorHandler(app);
 

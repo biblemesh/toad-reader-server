@@ -1,12 +1,11 @@
 const { log } = require('../utils/logger');
-const { GetObjectCommand } = require('@aws-sdk/client-s3');
+const { s3, GetObjectCommand } = require('../utils/util');
 /* global requireRouter */
 
 // FIXME replace this manual router with modern Express.js router config
 
 module.exports = function (
   app,
-  s3,
   passport,
   authFuncs,
   ensureAuthenticated,
