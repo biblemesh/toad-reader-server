@@ -2143,15 +2143,14 @@ const util = {
 
     return global.connection;
   },
+  S3Client,
+  GetObjectCommand,
+  PutObjectCommand,
+  ListObjectsCommand,
+  ListObjectsV2Command,
+  DeleteObjectsCommand,
+  CopyObjectCommand,
+  GetObjectAttributesCommand,
 };
 
 module.exports = util;
-module.exports.s3 = s3;
-module.exports.S3Client = S3Client;
-module.exports.GetObjectCommand = GetObjectCommand;
-module.exports.PutObjectCommand = PutObjectCommand;
-module.exports.ListObjectsCommand = ListObjectsCommand;
-module.exports.ListObjectsV2Command = ListObjectsV2Command;
-module.exports.DeleteObjectsCommand = DeleteObjectsCommand;
-module.exports.CopyObjectCommand = CopyObjectCommand;
-module.exports.GetObjectAttributesCommand = GetObjectAttributesCommand;
