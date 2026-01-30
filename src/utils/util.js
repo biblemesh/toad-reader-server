@@ -558,8 +558,8 @@ const util = {
           let responseText
           try {
             responseText = await response.text()
-          } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-            return;
+          } catch {
+            // Do nothing
           }
           log([`User not found (401) response from userInfoEndpoint`, responseText], 3)
           return res.send({
@@ -1150,8 +1150,8 @@ const util = {
                 )
                 : null
             )
-          } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-            return;
+          } catch {
+            // Do nothing
           }
 
           return {
@@ -1302,8 +1302,8 @@ const util = {
         if(row[col] !== undefined) {
           try {
             row[col] = JSON.parse(row[col])
-          } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-            return;
+          } catch {
+            // Do nothing
           }
         }
       })
