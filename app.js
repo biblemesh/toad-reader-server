@@ -10,13 +10,13 @@ const http = require('http');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
-require('dotenv').load();  //loads the local environment
+require('dotenv').load(); //loads the local environment
 const util = require('./src/utils/util');
 const jwt = require('jsonwebtoken');
 const { i18nSetup } = require('inline-i18n');
 const fs = require('fs');
 const sendEmail = require('./src/utils/sendEmail');
-require('array-flat-polyfill');  // Array.flat function
+require('array-flat-polyfill'); // Array.flat function
 const { log } = require('./src/utils/logger.js');
 
 ////////////// SETUP SERVER //////////////
@@ -408,18 +408,23 @@ readyPromises.push(
       const baseUrl = util.getDataOrigin(row);
       const samlStrategy = new saml.Strategy(
         {
-          issuer: baseUrl + '/shibboleth',
-          identifierFormat: null,
-          validateInResponseTo: false,
-          disableRequestedAuthnContext: true,
+          audience: false,
           callbackUrl: baseUrl + '/login/' + row.id + '/callback',
-          entryPoint: row.entryPoint,
-          logoutUrl: row.logoutUrl,
-          logoutCallbackUrl: baseUrl + '/logout/callback',
-          cert: row.idpcert,
           decryptionPvk: row.spkey,
-          privateCert: row.spkey,
+          digestAlgorithm: 'sha256',
+          disableRequestedAuthnContext: false,
+          entryPoint: row.entryPoint,
+          identifierFormat: null,
+          idpCert: row.idpcert,
+          issuer: baseUrl + '/shibboleth',
+          logoutCallbackUrl: baseUrl + '/logout/callback',
+          logoutUrl: row.logoutUrl,
           passReqToCallback: true,
+          privateKey: row.spkey,
+          signatureAlgorithm: 'sha256',
+          validateInResponseTo: 'ifPresent',
+          wantAssertionsSigned: true,
+          wantAuthnResponseSigned: true,
         },
         function (req, profile, done) {
           strategyCallback(req, row, profile, done);
