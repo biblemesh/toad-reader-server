@@ -5,7 +5,6 @@
 **/.git*
 
 **/.npmrc
-**/.serverless
 
 # Temporary files
 **/tmp_epub_*
