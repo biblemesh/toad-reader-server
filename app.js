@@ -248,9 +248,8 @@ const logIn = ({ userId, req, next, deviceLoginLimit }) => {
           let sessions = [];
           try {
             sessions = JSON.parse(value) || [];
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          } catch (err) {
-            return;
+          } catch {
+            // Do nothing
           }
 
           if (!sessions.includes(req.sessionID)) {
