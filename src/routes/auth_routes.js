@@ -382,6 +382,7 @@ module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn)
       }
 
       if(!util.isValidEmail(req.query.email)) {
+        // TODO we should add return here
         res.status(400).send({
           success: false,
           error: 'invalid email',
@@ -482,6 +483,7 @@ module.exports = function (app, passport, authFuncs, ensureAuthenticated, logIn)
       }
 
       if(!util.isValidEmail(req.body.email)) {
+        // TODO we should add return here
         res.status(400).send({
           success: false,
           error: 'invalid email',
