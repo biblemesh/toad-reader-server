@@ -1,9 +1,9 @@
-import * as express from 'express';
-import * as passport from 'passport';
-import * as request from 'supertest';
+import express from 'express';
+import passport from 'passport';
+import request from 'supertest';
 
-import * as util from '../utils/util';
-import * as setupRoutes from './routes';
+import util from '../utils/util';
+import setupRoutes from './routes';
 
 // Prevent further routers from being loaded
 global.requireRouter = jest.fn().mockReturnValue(jest.fn());
