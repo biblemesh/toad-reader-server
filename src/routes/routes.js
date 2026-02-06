@@ -1,11 +1,11 @@
 const { log } = require('../utils/logger');
+const { s3, GetObjectCommand } = require('../utils/util');
 /* global requireRouter */
 
 // FIXME replace this manual router with modern Express.js router config
 
 module.exports = function (
   app,
-  s3,
   passport,
   authFuncs,
   ensureAuthenticated,
@@ -67,7 +67,7 @@ module.exports = function (
     log,
   );
   requireRouter('./api_routes')(app, log);
-  requireRouter('./admin_routes')(app, s3, ensureAuthenticatedAndCheckIDP, log);
+  requireRouter('./admin_routes')(app, ensureAuthenticatedAndCheckIDP, log);
   requireRouter('./user_routes')(
     app,
     ensureAuthenticatedAndCheckIDP,
@@ -124,13 +124,13 @@ module.exports = function (
     }
 
     log(['Get S3 object', params.Key]);
-    s3.getObject(params, function (err, data) {
-      if (err) {
+    s3.send(new GetObjectCommand(params))
+      .catch((err) => {
         if (!tryWithoutDecode) {
           return getAssetFromS3(req, res, next, notFoundCallback, true);
         }
 
-        if (err.statusCode == 304) {
+        if (err.statusCode == 304 || err.$metadata?.httpStatusCode == 304) {
           const responseHeaders = {
             ETag: req.headers['if-none-match'],
             'Last-Modified': req.headers['if-modified-since'],
@@ -150,14 +150,22 @@ module.exports = function (
           log(['S3 file not found', params.Key], 2);
           res.status(404).send({ error: 'Not found' });
         }
-      } else {
+      })
+      .then(async ({ Body, LastModified, ContentLength, ETag }) => {
+        // Body is a ReadableStream in v3, need to convert to Buffer
+        const chunks = [];
+        for await (const chunk of Body) {
+          chunks.push(chunk);
+        }
+        const buffer = Buffer.concat(chunks);
+
         log('Deliver S3 object');
 
         const responseHeaders = {
-          'Last-Modified': data.LastModified,
-          'Content-Length': data.ContentLength,
+          'Last-Modified': LastModified,
+          'Content-Length': ContentLength,
           'Content-Type': mime.getType(urlWithoutQuery),
-          ETag: data.ETag,
+          ETag: ETag,
         };
 
         if (req.query.filename) {
@@ -165,9 +173,8 @@ module.exports = function (
             `attachment; filename=${req.query.filename}`;
         }
 
-        res.set(responseHeaders).send(Buffer.from(data.Body));
-      }
-    });
+        res.set(responseHeaders).send(buffer);
+      });
   };
 
   // serve the cover images for dev
