@@ -555,8 +555,8 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP) {
             `}`
           )
           res.end()
-        } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-          return;
+        } catch {
+          // Do nothing
         }
 
       } catch(err) {
@@ -573,8 +573,8 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP) {
               next,
             })
           }
-        } catch(err) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-          return;
+        } catch {
+          // Do nothing
         }
 
         try {

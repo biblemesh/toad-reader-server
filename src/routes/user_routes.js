@@ -10,10 +10,12 @@ const { log } = require('../utils/logger')
 const util = require('../utils/util')
 const sendEmail = require("../utils/sendEmail")
 
-const cloudFront = process.env.IS_DEV ? null : new AWS.CloudFront.Signer(
-  process.env.CLOUDFRONT_KEY_PAIR_ID,
-  process.env.CLOUDFRONT_PRIVATE_KEY.replace(/\\n/g, "\n"),
-)
+const cloudFront = process.env.IS_DEV
+  ? null
+  : new AWS.CloudFront.Signer(
+      process.env.CLOUDFRONT_KEY_PAIR_ID,
+      process.env.CLOUDFRONT_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    );
 
 const getSignedCookieAsync = params => new Promise((resolve, reject) => {
   cloudFront.getSignedCookie(params, (err, data) => {
