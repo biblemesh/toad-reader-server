@@ -42,11 +42,37 @@ You will also need to add the `rootCA.crt` root certificate to your OS or browse
 
 # Development
 
-`npm start`
+```bash
+npm start
+```
 
-# Updating Staging
+# Running Tests
 
-`npm run push-to-aws`
+## Available Commands
+
+- Run all tests:
+
+  ```bash
+  npm test
+  ```
+
+- Run a specific test file (e.g., `auth_routes.test.ts`):
+
+  ```bash
+  npm test -- auth_routes
+  ```
+
+- Watch mode:
+
+  ```bash
+  npm test -- --watch
+  ```
+
+## Notes
+
+- Make sure your `.env` files are correctly populated.
+- Watch out for default setting assumptions (e.g., default language, video quality).
+- All global states should be reset between tests to prevent cross-contamination.
 
 # Demo
 

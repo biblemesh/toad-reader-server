@@ -65,8 +65,6 @@ app.use(cors(corsOptionsDelegate));
 
 ////////////// SETUP STORAGE AND DB //////////////
 
-const s3 = util.s3;
-
 // ensure db connection for initial tasks
 readyPromises.push(util.getValidConnection());
 
@@ -248,9 +246,8 @@ const logIn = ({ userId, req, next, deviceLoginLimit }) => {
           let sessions = [];
           try {
             sessions = JSON.parse(value) || [];
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          } catch (err) {
-            return;
+          } catch {
+            // Do nothing
           }
 
           if (!sessions.includes(req.sessionID)) {
@@ -754,7 +751,6 @@ app.use('*', function (req, res, next) {
 
 require('./src/routes/routes')(
   app,
-  s3,
   passport,
   authFuncs,
   ensureAuthenticated,

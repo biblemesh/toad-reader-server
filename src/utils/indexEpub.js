@@ -63,8 +63,8 @@ const getIndexedBook = async ({ baseUri, spines }) => {
       try {
         process.stdout.clearLine()
         process.stdout.cursorTo(0)
-      } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-        return;
+      } catch {
+        // Do nothing
       }
       throw new Error(`Search indexing taking too long. Got through ${spineIndex} of ${spines.length} spines. Giving up: ${baseUri}`)
     }
@@ -79,8 +79,8 @@ const getIndexedBook = async ({ baseUri, spines }) => {
       try {
         process.stdout.clearLine()
         process.stdout.cursorTo(0)
-      } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-        return;
+      } catch {
+        // Do nothing
       }
 
       log(`Collect garbage as memory exceeding ${garbageCollectionThresholdInMebibyte} MiB (currently ~${memoryUsageInMebibyte} MiB)...`)
@@ -92,8 +92,8 @@ const getIndexedBook = async ({ baseUri, spines }) => {
   try {
     process.stdout.clearLine()
     process.stdout.cursorTo(0)
-  } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-    return;
+  } catch {
+    // Do nothing
   }
 
   log(`SearchIndexing: parsing done // Current memory usage: ${parseInt(process.memoryUsage().rss / mebibyte)} MiB`)

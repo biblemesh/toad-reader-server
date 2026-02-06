@@ -35,13 +35,15 @@
     ]
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.984.0",
+    "@aws-sdk/client-ses": "3.984.0",
+    "@aws-sdk/cloudfront-signer": "3.978.0",
     "@node-saml/passport-saml": "^5.1.0",
     "@sentry/node": "^8.55.0",
     "@sentry/profiling-node": "^8.55.0",
     "@shopify/shopify-api": "^6.2.0",
     "adm-zip": "0.4.13",
     "array-flat-polyfill": "^1.0.1",
-    "aws-sdk": "2.1476.0",
     "body-parser": "1.20.3",
     "cookie-parser": "1.4.4",
     "cookie-signature": "^1.1.0",

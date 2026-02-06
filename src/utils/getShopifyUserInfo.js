@@ -88,8 +88,8 @@ const getShopifyUserInfo = async ({ email, idp, waitToExecuteIfNecessary }) => {
           const { value } = metafields.find(({ key, namespace }) => (namespace === `custom` && key === `toad_reader_info`)) || {}
           customerMetafieldLines = `customer:\n${JSON.parse(value).join(`\n`)}`
           processedAtTimeById[`customer:`] = 1
-        } catch(err) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-          return;
+        } catch {
+          // Do nothing
         }
 
         // bookIds

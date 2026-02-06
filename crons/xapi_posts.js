@@ -78,8 +78,8 @@ module.exports = async () => {
                     let json = 'No response JSON'
                     try {
                       json = await res.json()
-                    } catch(err) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-                      return;
+                    } catch {
+                      // Do nothing
                     }
                     log(['Cron: Bad xapi post for idp id #' + row.id, json.warnings || json, JSON.stringify(statements), cronRunUid], 2);
                     markDone();
