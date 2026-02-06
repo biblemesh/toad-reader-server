@@ -637,7 +637,7 @@ const util = {
           try {
             responseText = await response.text();
           } catch {
-            return;
+            // Do nothing
           }
           log(
             [
@@ -1337,7 +1337,7 @@ const util = {
                     ])
                   : null;
             } catch {
-              return;
+              // Do nothing
             }
 
             return {
@@ -1560,7 +1560,7 @@ const util = {
           try {
             row[col] = JSON.parse(row[col]);
           } catch {
-            return;
+            // Do nothing
           }
         }
       });

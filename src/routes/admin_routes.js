@@ -630,7 +630,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP) {
             );
             res.end();
           } catch {
-            return;
+            // Do nothing
           }
         } catch (err) {
           log(['Import book exception', err.message], 3);
@@ -647,7 +647,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP) {
               });
             }
           } catch {
-            return;
+            // Do nothing
           }
 
           try {

@@ -246,9 +246,8 @@ const logIn = ({ userId, req, next, deviceLoginLimit }) => {
           let sessions = [];
           try {
             sessions = JSON.parse(value) || [];
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          } catch (err) {
-            return;
+          } catch {
+            // Do nothing
           }
 
           if (!sessions.includes(req.sessionID)) {
@@ -494,9 +493,8 @@ const ensureAuthenticated = async (req, res, next) => {
         let sessions = [];
         try {
           sessions = JSON.parse(value) || [];
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (err) {
-          return;
+        } catch {
+          // Do nothing
         }
 
         if (!sessions.includes(req.sessionID)) {
@@ -724,9 +722,8 @@ app.use(function (req, res, next) {
       req.query.cookieOverride ||
       JSON.parse(req.body.RelayState).cookieOverride ||
       req.headers.cookie;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (e) {
-    return;
+  } catch {
+    // Do nothing
   }
   next();
 });

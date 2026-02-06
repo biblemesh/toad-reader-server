@@ -107,8 +107,8 @@ module.exports = async ({ baseUri }) => {
           return true
         }
       })
-    } catch(e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-      return;
+    } catch {
+      // Do nothing
     }
 
   } catch(e) {
