@@ -578,8 +578,8 @@ describe('auth_routes', () => {
     it('should authenticate and redirect to default login redirect', async () => {
       setupPassportAuthenticate(
         'custom',
-        (req: Request, _res: Response, next: NextFunction) => {
-          (req as RequestWithUser).session = { loginRedirect: '/confirmlogin' };
+        (req: RequestWithUser, _res: Response, next: NextFunction) => {
+          req.session = { loginRedirect: '/confirmlogin' };
           next!();
         },
       );
@@ -617,8 +617,8 @@ describe('auth_routes', () => {
     it('should handle missing session loginRedirect gracefully', async () => {
       setupPassportAuthenticate(
         'custom',
-        (req: Request, _res: Response, next: NextFunction) => {
-          (req as RequestWithUser).session = {};
+        (req: RequestWithUser, _res: Response, next: NextFunction) => {
+          req.session = {};
           next!();
         },
       );
