@@ -19,16 +19,18 @@ interface MockUser {
   idpDeviceLoginLimit?: number;
 }
 
-interface RequestWithUser extends Request {
+// Use intersection type to avoid inheritance issues
+type RequestWithUser = Request & {
   user?: MockUser;
-  isAuthenticated?: () => boolean;
-  logout?: () => void;
   sessionID?: string;
   idpLang?: string;
   session?: {
     loginRedirect?: string;
   };
-}
+};
+
+// Helper type for safely adding mock methods without conflicting with Passport types
+type RequestWithMocks = RequestWithUser & Record<string, unknown>;
 
 // ===== MOCK UTILITIES AND DEPENDENCIES =====
 const mockUtilFunctions = {
@@ -183,10 +185,13 @@ const setupFailureMocks = {
 
 const setupAuthenticatedRequest = (user: MockUser = createMockUser()) => {
   return (_req: Request, _res: Response, next: NextFunction) => {
-    const req = _req as RequestWithUser;
+    const req = _req as RequestWithMocks;
     req.user = user;
-    req.isAuthenticated = jest.fn().mockReturnValue(true);
-    req.logout = jest.fn();
+    // Use Object.assign to bypass TypeScript's strict type checking for Passport methods
+    Object.assign(req, {
+      isAuthenticated: jest.fn().mockReturnValue(true),
+      logout: jest.fn(),
+    });
     req.sessionID = 'mock-session-id';
     next();
   };
@@ -241,6 +246,18 @@ describe('auth_routes', () => {
     app = express();
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
+
+    // Add passport methods to all requests
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      // Use Object.assign to bypass TypeScript's strict type checking for Passport methods
+      Object.assign(req, {
+        isAuthenticated: jest.fn().mockReturnValue(false),
+        logout: jest.fn((callback?: (err?: Error) => void) => {
+          if (callback) callback();
+        }),
+      });
+      next();
+    });
 
     // Create mock functions
     mockAuthFuncs = {
@@ -561,8 +578,8 @@ describe('auth_routes', () => {
     it('should authenticate and redirect to default login redirect', async () => {
       setupPassportAuthenticate(
         'custom',
-        (req: RequestWithUser, _res: Response, next: NextFunction) => {
-          req.session = { loginRedirect: '/confirmlogin' };
+        (req: Request, _res: Response, next: NextFunction) => {
+          (req as RequestWithUser).session = { loginRedirect: '/confirmlogin' };
           next!();
         },
       );
@@ -600,8 +617,8 @@ describe('auth_routes', () => {
     it('should handle missing session loginRedirect gracefully', async () => {
       setupPassportAuthenticate(
         'custom',
-        (req: RequestWithUser, _res: Response, next: NextFunction) => {
-          req.session = {};
+        (req: Request, _res: Response, next: NextFunction) => {
+          (req as RequestWithUser).session = {};
           next!();
         },
       );
@@ -851,7 +868,7 @@ describe('auth_routes', () => {
             },
           );
 
-          if ((req as Request).query.noredirect) {
+          if (req.query.noredirect) {
             res.send({ success: true });
           } else {
             res.redirect('https://example.com');
@@ -880,7 +897,7 @@ describe('auth_routes', () => {
           req.user = mockUser;
           req.sessionID = 'test-session';
 
-          if ((req as Request).query.noredirect) {
+          if (req.query.noredirect) {
             res.send({ success: true });
           } else {
             res.redirect('https://example.com');
