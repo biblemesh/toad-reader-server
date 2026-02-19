@@ -1,6 +1,7 @@
 ////////////// REQUIRES //////////////
 require('./src/instrument.js');
 
+const saml = require('@node-saml/passport-saml');
 const Sentry = require('@sentry/node');
 const express = require('express');
 const cors = require('cors');
@@ -9,7 +10,6 @@ const http = require('http');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
-const saml = require('passport-saml');
 require('dotenv').load(); //loads the local environment
 const util = require('./src/utils/util');
 const jwt = require('jsonwebtoken');
@@ -390,33 +390,27 @@ readyPromises.push(
       return;
     }
 
-    // next block is temporary
-    rows = rows
-      .map((row) => [
-        row,
-        {
-          ...row,
-          old: true,
-        },
-      ])
-      .flat();
-
     rows.forEach(function (row) {
       const baseUrl = util.getDataOrigin(row);
       const samlStrategy = new saml.Strategy(
         {
-          issuer: baseUrl + '/shibboleth',
-          identifierFormat: null,
-          validateInResponseTo: false,
-          disableRequestedAuthnContext: true,
+          audience: false,
           callbackUrl: baseUrl + '/login/' + row.id + '/callback',
-          entryPoint: row.entryPoint,
-          logoutUrl: row.logoutUrl,
-          logoutCallbackUrl: baseUrl + '/logout/callback',
-          cert: row.idpcert,
           decryptionPvk: row.spkey,
-          privateCert: row.spkey,
+          digestAlgorithm: 'sha256',
+          disableRequestedAuthnContext: false,
+          entryPoint: row.entryPoint,
+          identifierFormat: null,
+          idpCert: row.idpcert,
+          issuer: baseUrl + '/shibboleth',
+          logoutCallbackUrl: baseUrl + '/logout/callback',
+          logoutUrl: row.logoutUrl,
           passReqToCallback: true,
+          privateKey: row.spkey,
+          signatureAlgorithm: 'sha256',
+          validateInResponseTo: 'ifPresent',
+          wantAssertionsSigned: true,
+          wantAuthnResponseSigned: true,
         },
         function (req, profile, done) {
           strategyCallback(req, row, profile, done);
