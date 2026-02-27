@@ -16,7 +16,7 @@ services:
       - ./add-data-to-sql-file.sh:/data/entrypoint.sh:ro
       - ./seeds.sql:/data/seeds.sql:ro
       - mysql-init-script:/data/output:rw
-    command: ["/data/entrypoint.sh"]
+    command: ['/data/entrypoint.sh']
     pull_policy: build
 
   mysql:
@@ -118,7 +118,7 @@ services:
     volumes:
       - minio-data:/data
     ports:
-      - "9001:9001"
+      - '9001:9001'
     networks:
       - reader
     environment:
