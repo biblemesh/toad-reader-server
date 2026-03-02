@@ -206,6 +206,24 @@ module.exports = function (
     },
   );
 
+  // serve self-hosted font files for the share page (no auth required)
+  app.get('/assets/fonts/:filename', function (req, res) {
+    if (!/^[a-zA-Z0-9_-]+\.woff2$/.test(req.params.filename)) {
+      return res.status(400).send({ error: 'Invalid filename' });
+    }
+    var fontFile = path.join(process.cwd(), 'src/assets/fonts', req.params.filename);
+    if (!fs.existsSync(fontFile)) {
+      return res.status(404).send({ error: 'Not found' });
+    }
+    log(['Deliver font file', fontFile]);
+    res.sendFile(fontFile, {
+      headers: {
+        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Content-Type': 'font/woff2',
+      },
+    });
+  });
+
   // serve the static files
   app.get('/favicon.ico', function (req, res, next) {
     // see if the tenant has a custom favicon, otherwise do the standard

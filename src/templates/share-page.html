@@ -13,8 +13,23 @@
     <meta property="og:description" content="{{quote_noquotes}}" />
     <meta property="og:image" content="{{book_image_url}}" />
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <style>
+        @font-face {
+            font-family: 'Montserrat';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('/assets/fonts/montserrat-latin-400-normal.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('/assets/fonts/open-sans-latin-400-normal.woff2') format('woff2');
+        }
+
         body {
             font-family: 'Open Sans', sans-serif;
             text-align: center;
@@ -184,23 +199,18 @@
         }
 
         .copy-url {
-            position: relative;
-            border-radius: 2px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 12px;
             font-size: 11px;
-            line-height: 18px;
-            padding: 0 7px;
-            vertical-align: top;
-            margin-bottom: 5px;
-        }
+            line-height: 1;
+            border-radius: 4px;
+            }
 
         .copy-url-copied.show {
             color: black;
-        }
-
-        .fb-like {
-            display: inline-block;
-            vertical-align: top;
-            margin-bottom: 5px;
         }
 
         .copyel {
@@ -211,61 +221,74 @@
             height: 10px;
         }
 
-        .twitter-share-button, .share-text {
-            vertical-align: top;
-            margin-bottom: 5px;
+        .twitter-share-button {
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+
+            background: #000;
+            color: #fff;
+            padding: 0 14px;
+            border-radius: 9999px;
+
+            text-decoration: none;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            -webkit-font-smoothing: antialiased;
+            }
+
+            .twitter-share-button::before {
+            content: "";
+            width: 14px;
+            height: 14px;
             display: inline-block;
-        }
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+
+            /* X logo (SVG) as data URI */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M18.901 2H22l-6.77 7.74L23.5 22h-6.83l-5.34-7.02L5.2 22H2l7.28-8.32L1 2h7l4.83 6.42L18.9 2Zm-1.2 18h1.89L6.3 3.93H4.28L17.7 20Z'/%3E%3C/svg%3E");
+            }
+
+            .twitter-share-button:hover {
+            background: #333;
+            }
+
+            .twitter-share-button:focus-visible,
+            .copy-url:focus-visible {
+            outline: 2px solid #6399D5;
+            outline-offset: 2px;
+            }
     </style>
 
     <script>
-        window.twttr = (function(d, s, id) {
-            var js, fjs = d.getElementsByTagName(s)[0],
-                t = window.twttr || {};
-            if (d.getElementById(id)) return t;
-            js = d.createElement(s);
-            js.id = id;
-            js.src = "https://platform.twitter.com/widgets.js";
-            fjs.parentNode.insertBefore(js, fjs);
-            t._e = [];
-            t.ready = function(f) {
-                t._e.push(f);
-            };
-            return t;
-        }(document, "script", "twitter-wjs"));
-
-        function copyLink(link) {
-            var copyEl = $('<input class="copyel" />');
-            copyEl.val(link);
-            $('body').append(copyEl);
-            copyEl.select()
-            copyEl.focus();
-            
-            document.execCommand('copy');
-
-            copyEl.remove();
-            
-            $('.copy-url-copied').addClass('show');
-            setTimeout(function() {
-                $('.copy-url-copied').removeClass('show');
-            }, 600);
+        async function copyLink(link) {
+            try {
+                await navigator.clipboard.writeText(link);
+            } catch (err) {
+                var copyEl = document.createElement('input');
+                copyEl.className = 'copyel';
+                copyEl.value = link;
+                document.body.appendChild(copyEl);
+                copyEl.select();
+                copyEl.focus();
+                document.execCommand('copy');
+                copyEl.remove();
+            }
+            var notice = document.querySelector('.copy-url-copied');
+            notice.classList.add('show');
+            setTimeout(function() { notice.classList.remove('show'); }, 600);
         }
     </script>
 
-    <link href="https://fonts.googleapis.com/css?family=Montserrat|Open+Sans" rel="stylesheet">
 
 </head>
 
 <body>
-
-    <div id="fb-root"></div>
-    <script>(function(d, s, id) {
-    var js, fjs = d.getElementsByTagName(s)[0];
-    if (d.getElementById(id)) return;
-    js = d.createElement(s); js.id = id;
-    js.src = "//connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v2.8";
-    fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));</script>
 
     <div class="cont">
 
@@ -273,12 +296,11 @@
         <div class="sharing">
             <span class="share-text">{{share}}</span>
             <button class="copy-url" onclick='copyLink("{{url_noquotes}}");'>{{copy_link}}<div class="copy-url-copied">{{copied}}</div></button>
-            <a class="twitter-share-button" href="https://twitter.com/intent/tweet?text={{note_abridged_escaped}}&url={{url_escaped}}">Tweet</a>
-            <div class="fb-like" data-href="{{url_noquotes}}" data-layout="standard" data-action="like" data-show-faces="false" data-share="true" data-width="225px"></div>
+            <a class="twitter-share-button" href="https://twitter.com/intent/tweet?text={{note_abridged_escaped}}&url={{url_escaped}}" target="_blank" rel="noopener noreferrer">Post</a>
         </div>
         <div class="book-cont">
             <div class="book">
-                <div class="book-image" style="background-image:url({{book_image_url}})" /></div>
+                <div class="book-image" style="background-image:url({{book_image_url}})"></div>
                 <div class="book-info">
                     <div class="book-title">{{book_title}}</div>
                     <div class="book-author">{{book_author}}</div>
