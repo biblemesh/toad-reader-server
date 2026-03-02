@@ -69,9 +69,6 @@ app.use(cors(corsOptionsDelegate))
 
 const s3 = util.s3
 
-// ensure db connection for initial tasks
-readyPromises.push(util.getValidConnection())
-
 // ensure session store is ready
 readyPromises.push(
   util.sessionStore.onReady().then(() => {
@@ -81,12 +78,6 @@ readyPromises.push(
     throw error
   })
 )
-
-app.use(async (req, res, next) => {
-  // on each request, ensure db connection is working
-  await util.getValidConnection()
-  next()
-})
 
 ////////////// SETUP I18N //////////////
 
@@ -354,7 +345,6 @@ readyPromises.push(
       })
       if(rows) break
       await new Promise(resolve => setTimeout(resolve, 500))
-      await util.getValidConnection()
     }
 
     if(!rows) {
