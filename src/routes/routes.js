@@ -211,7 +211,11 @@ module.exports = function (
     if (!/^[a-zA-Z0-9_-]+\.woff2$/.test(req.params.filename)) {
       return res.status(400).send({ error: 'Invalid filename' });
     }
-    var fontFile = path.join(process.cwd(), 'src/assets/fonts', req.params.filename);
+    var fontFile = path.join(
+      process.cwd(),
+      'src/assets/fonts',
+      req.params.filename,
+    );
     if (!fs.existsSync(fontFile)) {
       return res.status(404).send({ error: 'Not found' });
     }
