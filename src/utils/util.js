@@ -157,17 +157,6 @@ const openConnection = () => {
     // debug: true,
   })
 
-  // It seems that when a lambda instance is connected too long, and so its db connection
-  // exceeds 8 hours, that the connection times out and all queries fail. To prevent this,
-  // we are using connection pooling and closing all the connections every hour. (This timeout
-  // should only actually fire if the lambda instance persists over an hour.)
-  // See https://stackoverflow.com/questions/70645884/error-packets-out-of-order-got-0-expected-3
-  setTimeout(() => {
-    log([`Close connection pool`])
-    global.connection.end()
-    delete global.connection
-  }, 1000 * 60 * 60)
-
   return global.connection
 
 }
