@@ -1,3 +1,4 @@
+const awsCaBundle = require('aws-ssl-profiles');
 const moment = require('moment')
 const jwt = require('jsonwebtoken')
 const fetch = require('node-fetch')
@@ -128,8 +129,7 @@ const jsonCols = {
 const openConnection = () => {
 
   log([`Establish connection pool`])
-
-  global.connection = mysql.createPool({
+  const connectionOptions = {
     host: process.env.OVERRIDE_DATABASE_HOSTNAME || process.env.DATABASE_HOSTNAME,
     port: process.env.OVERRIDE_DATABASE_PORT || process.env.DATABASE_PORT,
     user: process.env.OVERRIDE_DATABASE_USERNAME || process.env.DATABASE_USERNAME,
@@ -155,7 +155,13 @@ const openConnection = () => {
       }
     },
     // debug: true,
-  })
+  };
+
+  if (process.env.USE_RDS_CERTIFICATE_BUNDLE === 'true') {
+    connectionOptions.ssl = awsCaBundle;
+  }
+
+  global.connection = mysql.createPool(connectionOptions);
 
   return global.connection
 
