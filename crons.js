@@ -1,7 +1,6 @@
 require('dotenv').config();
 
 const { log } = require('./src/utils/logger');
-const util = require('./src/utils/util');
 const dueDateReminders = require('./crons/due_date_reminders');
 // const xapiPosts = require('./crons/xapi_posts')
 
@@ -12,7 +11,10 @@ const next = (err) => {
 };
 
 const crons = async ({ forceRunAll } = {}) => {
-  await util.getValidConnection();
+  if (global.connection == null) {
+    log('No connection to database', 3);
+    return;
+  }
 
   //const day = new Date().getDay()  // 0-6
   const hours = new Date().getHours(); // 0-23

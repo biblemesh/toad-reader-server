@@ -206,12 +206,7 @@ const util = {
 
   session,
 
-  sessionStore: new MySQLStore(
-    {},
-    !global.connection
-      ? openConnection().promise()
-      : global.connection.promise(),
-  ),
+  sessionStore: new MySQLStore({}, openConnection().promise()),
 
   getUTCTimeStamp: function () {
     return new Date().getTime();
@@ -2111,27 +2106,6 @@ const util = {
 
   openConnection,
 
-  getValidConnection: async () => {
-    // Connect to DB if not already connected
-
-    if (global.connection) {
-      try {
-        await global.connection.promise().query(`SELECT 1`); // test the connection
-      } catch (err) {
-        console.error(
-          `Connection was present, but not working. Attempting to delete and re-establish it.`,
-          err,
-        );
-        delete global.connection;
-      }
-    }
-
-    if (!global.connection) {
-      openConnection();
-    }
-
-    return global.connection;
-  },
   S3Client,
   GetObjectCommand,
   PutObjectCommand,
