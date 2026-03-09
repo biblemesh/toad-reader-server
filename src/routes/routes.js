@@ -206,25 +206,44 @@ module.exports = function (
     },
   );
 
-  // serve self-hosted font files for the share page (no auth required)
-  app.get('/assets/fonts/:filename', function (req, res) {
-    if (!/^[a-zA-Z0-9_-]+\.woff2$/.test(req.params.filename)) {
-      return res.status(400).send({ error: 'Invalid filename' });
-    }
-    var fontFile = path.join(
-      process.cwd(),
-      'src/assets/fonts',
-      req.params.filename,
-    );
-    if (!fs.existsSync(fontFile)) {
-      return res.status(404).send({ error: 'Not found' });
-    }
-    log(['Deliver font file', fontFile]);
-    res.sendFile(fontFile, {
-      headers: {
-        'Cache-Control': 'public, max-age=31536000, immutable',
-        'Content-Type': 'font/woff2',
-      },
+  // serve self-hosted static assets for the share page (no auth required)
+  var sharePageAssets = [
+    {
+      route: '/assets/fonts/:filename',
+      ext: /^[a-zA-Z0-9_-]+\.woff2$/,
+      dir: 'src/assets/fonts',
+      mime: 'font/woff2',
+    },
+    {
+      route: '/assets/style/:filename',
+      ext: /^[a-zA-Z0-9_-]+\.css$/,
+      dir: 'src/assets/style',
+      mime: 'text/css',
+    },
+    {
+      route: '/assets/js/:filename',
+      ext: /^[a-zA-Z0-9_-]+(?:\.browser)?\.js$/,
+      dir: 'src/assets/js',
+      mime: 'application/javascript',
+    },
+  ];
+
+  sharePageAssets.forEach(function (asset) {
+    app.get(asset.route, function (req, res) {
+      if (!asset.ext.test(req.params.filename)) {
+        return res.status(400).send({ error: 'Invalid filename' });
+      }
+      var file = path.join(process.cwd(), asset.dir, req.params.filename);
+      if (!fs.existsSync(file)) {
+        return res.status(404).send({ error: 'Not found' });
+      }
+      log(['Deliver asset', file]);
+      res.sendFile(file, {
+        headers: {
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'Content-Type': asset.mime,
+        },
+      });
     });
   });
 

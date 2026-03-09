@@ -139,10 +139,10 @@ module.exports = function (
     res.set({
       'Content-Security-Policy': [
         "default-src 'self'",
-        "style-src 'self' 'unsafe-inline'",
-        "script-src 'self' 'unsafe-inline'",
+        "style-src 'self'",
+        "script-src 'self'",
         "font-src 'self'",
-        "img-src 'self' data: https:",
+        `img-src 'self' data: ${frontendBaseUrl}`,
         "connect-src 'none'",
         "frame-ancestors 'none'",
         "form-action 'none'",
