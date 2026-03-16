@@ -8,8 +8,8 @@ const md5 = require('md5')
 const useragent = require('useragent')
 const session = require('express-session')
 const MySQLStore = require('express-mysql-session')(session)
-const mysql = require('mysql')
-const SqlString = require('mysql/lib/protocol/SqlString')
+const mysql = require('mysql2');
+const SqlString = require('sqlstring');
 const { log } = require('./logger')
 
 const getShopifyUserInfo = require('./getShopifyUserInfo')
@@ -27,14 +27,6 @@ if (process.env.USE_DEVELOPMENT_S3) {
   s3Config.s3ForcePathStyle = true;
 }
 const s3 = new AWS.S3(s3Config)
-
-const mySqlSessionOptions = {
-  host: process.env.OVERRIDE_DATABASE_HOSTNAME || process.env.DATABASE_HOSTNAME,
-  port: process.env.OVERRIDE_DATABASE_PORT || process.env.DATABASE_PORT,
-  user: process.env.OVERRIDE_DATABASE_USERNAME || process.env.DATABASE_USERNAME,
-  password: process.env.OVERRIDE_DATABASE_PASSWORD || process.env.DATABASE_PASSWORD,
-  database: process.env.OVERRIDE_DATABASE_NAME || process.env.DATABASE_NAME,
-}
 
 var getXapiActor = function(params) {
   return {
@@ -144,6 +136,7 @@ const openConnection = () => {
     password: process.env.OVERRIDE_DATABASE_PASSWORD || process.env.DATABASE_PASSWORD,
     database: process.env.OVERRIDE_DATABASE_NAME || process.env.DATABASE_NAME,
     multipleStatements: true,
+    namedPlaceholders: true,
     dateStrings: true,
     charset : 'utf8mb4',
     queryFormat: function (query, values) {
@@ -200,7 +193,12 @@ const util = {
 
   session,
 
-  sessionStore: new MySQLStore(mySqlSessionOptions),
+  sessionStore: new MySQLStore(
+    {},
+    !global.connection
+      ? openConnection().promise()
+      : global.connection.promise(),
+  ),
 
   getUTCTimeStamp: function(){
     return new Date().getTime();
@@ -1799,7 +1797,7 @@ const util = {
 
     if(global.connection) {
       try {
-        await global.connection.query(`SELECT 1`)  // test the connection
+        await global.connection.promise().query(`SELECT 1`)  // test the connection
       } catch(err) {
         console.error(`Connection was present, but not working. Attempting to delete and re-establish it.`, err)
         delete global.connection
