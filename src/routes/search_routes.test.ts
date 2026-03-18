@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import * as express from 'express';
-import * as request from 'supertest';
-import * as util from '../utils/util';
-import * as setupSearchRoutes from './search_routes';
+import express from 'express';
+import request from 'supertest';
+import util from '../utils/util';
+import setupSearchRoutes from './search_routes';
 
 jest.mock('express-mysql-session', () => () => jest.fn());
 

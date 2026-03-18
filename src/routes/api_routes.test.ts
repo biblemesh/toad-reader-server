@@ -1,7 +1,7 @@
-import * as request from 'supertest';
-import * as util from '../utils/util';
-import * as express from 'express';
-import * as setupApiRoutes from './api_routes';
+import request from 'supertest';
+import util from '../utils/util';
+import express from 'express';
+import setupApiRoutes from './api_routes';
 
 jest.mock('express-mysql-session', () => () => jest.fn());
 

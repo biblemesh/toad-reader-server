@@ -1,3 +1,11 @@
+import request from 'supertest';
+import express from 'express';
+import patchRoute from '../routes/patch_route';
+import util from '../utils/util';
+import patchLatestLocation from '../routes/patch_keys/patch_latest_location';
+import patchHighlights from '../routes/patch_keys/patch_highlights';
+import patchClassrooms from '../routes/patch_keys/patch_classrooms';
+
 jest.mock('../utils/logger', () => ({
   log: jest.fn(),
 }));
@@ -20,14 +28,6 @@ jest.mock('../routes/patch_keys/patch_classrooms', () => ({
   addPreQueries: jest.fn(),
   addPatchQueries: jest.fn(),
 }));
-
-import * as request from 'supertest';
-import * as express from 'express';
-import * as patchRoute from '../routes/patch_route';
-import * as util from '../utils/util';
-import * as patchLatestLocation from '../routes/patch_keys/patch_latest_location';
-import * as patchHighlights from '../routes/patch_keys/patch_highlights';
-import * as patchClassrooms from '../routes/patch_keys/patch_classrooms';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type PatchQuestionParams = {
