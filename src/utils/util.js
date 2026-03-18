@@ -1,3 +1,4 @@
+const Sentry = require('@sentry/node');
 const awsCaBundle = require('aws-ssl-profiles');
 const moment = require('moment');
 const jwt = require('jsonwebtoken');
@@ -1618,15 +1619,30 @@ const util = {
 
   runQuery: ({ query, queries, vars, next }) =>
     new Promise((resolve) => {
-      const { sql } = global.connection.query(
-        query || queries.join(';'),
+      /** @type mysql.Pool */
+      const connection = global.connection;
+      query = query ?? queries.join(';');
+      const { sql } = connection.query(
+        query,
         // The following did not seem to work
         // {
-        //   sql: query || queries.join(';'),
+        //   sql: query,
         //   timeout: 1000 * 10,
         // },
         vars,
         (err, result) => {
+          Sentry.addBreadcrumb({
+            type: 'info',
+            category: 'query',
+            message: query,
+            level: Sentry.Severity.Info,
+            data: {
+              'db.statement': query,
+              'db.params': vars,
+              'db.error': err,
+              'db.result': result,
+            },
+          });
           if (err) {
             next(err);
             resolve();
