@@ -2,8 +2,7 @@
 
 ARG ALPINE_VERSION=3.21
 ARG NODE_VERSION=20
-# TODO upgrade to 13 before support ends in September 2026
-ARG DEBIAN_VERSION=12
+ARG DEBIAN_VERSION=13
 ARG RUNTIME_NODE_TAG=nonroot
 
 ##########################
