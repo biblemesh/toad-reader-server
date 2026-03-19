@@ -184,24 +184,26 @@ module.exports = {
           highlight.book_id = bookId;
           queriesToRun.push({
             query: 'INSERT INTO `highlight` SET ?',
-            vars: highlight,
+            vars: [highlight],
           });
           if (user.idpXapiOn && books.length > 0) {
             queriesToRun.push({
               query: 'INSERT INTO `xapiQueue` SET ?',
-              vars: {
-                idp_id: user.idpId,
-                statement: util.getAnnotateStatement({
-                  req: req,
-                  bookId: highlight.book_id,
-                  bookTitle: books[0].title,
-                  bookISBN: books[0].isbn,
-                  spineIdRef: highlight.spineIdRef,
-                  timestamp: updatedAtTimestamp,
-                }),
-                unique_tag: Date.now(), // not worried about dups here
-                created_at: now,
-              },
+              vars: [
+                {
+                  idp_id: user.idpId,
+                  statement: util.getAnnotateStatement({
+                    req: req,
+                    bookId: highlight.book_id,
+                    bookTitle: books[0].title,
+                    bookISBN: books[0].isbn,
+                    spineIdRef: highlight.spineIdRef,
+                    timestamp: updatedAtTimestamp,
+                  }),
+                  unique_tag: Date.now(), // not worried about dups here
+                  created_at: now,
+                },
+              ],
             });
           }
         }

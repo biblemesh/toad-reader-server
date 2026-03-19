@@ -70,39 +70,43 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP) {
             if (req.user.idpXapiOn) {
               queriesToRun.push({
                 query: 'INSERT INTO `xapiQueue` SET ?',
-                vars: {
-                  idp_id: req.user.idpId,
-                  statement: util.getReadStatement({
-                    req: req,
-                    bookId: reading.bookId,
-                    bookTitle: book.title,
-                    bookISBN: book.isbn,
-                    spineIdRef: reading.spineIdRef,
-                    timestamp,
-                    durationInSeconds,
-                  }),
-                  // this is to prevent dups being inserted from a repeated request due to a spotted internet connection
-                  unique_tag:
-                    req.user.id +
-                    '-' +
-                    reading.startTime +
-                    '-' +
-                    reading.endTime,
-                  created_at: currentMySQLDatetime,
-                },
+                vars: [
+                  {
+                    idp_id: req.user.idpId,
+                    statement: util.getReadStatement({
+                      req: req,
+                      bookId: reading.bookId,
+                      bookTitle: book.title,
+                      bookISBN: book.isbn,
+                      spineIdRef: reading.spineIdRef,
+                      timestamp,
+                      durationInSeconds,
+                    }),
+                    // this is to prevent dups being inserted from a repeated request due to a spotted internet connection
+                    unique_tag:
+                      req.user.id +
+                      '-' +
+                      reading.startTime +
+                      '-' +
+                      reading.endTime,
+                    created_at: currentMySQLDatetime,
+                  },
+                ],
               });
             }
 
             if (req.user.idpReadingSessionsOn) {
               queriesToRun.push({
                 query: 'INSERT INTO `reading_session` SET ?',
-                vars: {
-                  user_id: req.user.id,
-                  book_id: reading.bookId,
-                  spineIdRef: reading.spineIdRef,
-                  read_at: util.timestampToMySQLDatetime(timestamp),
-                  duration_in_seconds: durationInSeconds,
-                },
+                vars: [
+                  {
+                    user_id: req.user.id,
+                    book_id: reading.bookId,
+                    spineIdRef: reading.spineIdRef,
+                    read_at: util.timestampToMySQLDatetime(timestamp),
+                    duration_in_seconds: durationInSeconds,
+                  },
+                ],
               });
             }
           });
