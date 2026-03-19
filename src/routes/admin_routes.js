@@ -272,7 +272,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
         log(['Insert book row', bookRow], 2)
         bookRow.id = (await util.runQuery({
           query: 'INSERT INTO `book` SET ?',
-          vars: bookRow,
+          vars: [bookRow],
           next,
         })).insertId
 
@@ -400,7 +400,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
             log(['INSERT book-idp row', vars], 2)
             await util.runQuery({
               query: 'INSERT INTO `book-idp` SET ?',
-              vars,
+              vars: [vars],
               next,
             })
 
@@ -453,7 +453,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
           log(['INSERT book-idp row', vars], 2)
           await util.runQuery({
             query: 'INSERT INTO `book-idp` SET ?',
-            vars,
+            vars: [vars],
             next,
           })
         }
@@ -848,7 +848,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
       log(['Insert book row', bookRow], 2)
       bookRow.id = (await util.runQuery({
         query: 'INSERT INTO `book` SET ?',
-        vars: bookRow,
+        vars: [bookRow],
         next,
       })).insertId
 
@@ -862,7 +862,7 @@ module.exports = function (app, s3, ensureAuthenticatedAndCheckIDP, log) {
       log(['INSERT book-idp row', bookIdpRow], 2)
       await util.runQuery({
         query: 'INSERT INTO `book-idp` SET ?',
-        vars: bookIdpRow,
+        vars: [bookIdpRow],
         next,
       })
 
