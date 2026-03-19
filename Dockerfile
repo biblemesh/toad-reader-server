@@ -2,6 +2,9 @@
 
 ARG ALPINE_VERSION=3.21
 ARG NODE_VERSION=20
+# TODO upgrade to 13 before support ends in September 2026
+ARG DEBIAN_VERSION=12
+ARG RUNTIME_NODE_TAG=nonroot
 
 ##########################
 # Cache-preserving image #
@@ -40,18 +43,19 @@ COPY package.json .
 # Development image #
 #####################
 
-# TODO switch to gcr.io/distroless after we upgrade to Node.js 18 (see ereader-callback Dockerfile)
-FROM node:${NODE_VERSION}-slim AS development
+FROM gcr.io/distroless/nodejs${NODE_VERSION}-debian${DEBIAN_VERSION}:${RUNTIME_NODE_TAG} AS development
 
 ARG AUTHOR
 ARG DATETIMENOW
 ARG REVISION
+ARG NODE_VERSION
+ARG DEBIAN_VERSION
 ARG RUNTIME_NODE_TAG
 ARG TAG_VERSION_NUMBER
 
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md
 LABEL org.opencontainers.image.authors=${AUTHOR} \
-  org.opencontainers.image.base.name="node:${NODE_VERSION}-slim" \
+  org.opencontainers.image.base.name="gcr.io/distroless/nodejs${NODE_VERSION}-debian${DEBIAN_VERSION}:${RUNTIME_NODE_TAG}" \
   org.opencontainers.image.created=${DATETIMENOW} \
   org.opencontainers.image.description="eReader" \
   org.opencontainers.image.source="https://github.com/biblemesh/toad-reader-server" \
