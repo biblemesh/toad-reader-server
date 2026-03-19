@@ -1635,7 +1635,7 @@ const util = {
             type: 'info',
             category: 'query',
             message: query,
-            level: Sentry.Severity.Info,
+            level: 'info',
             data: {
               'db.statement': query,
               'db.params': vars,
