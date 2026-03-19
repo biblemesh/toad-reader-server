@@ -578,7 +578,7 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP, ensureAuthentica
 
               global.connection.query(
                 `INSERT INTO classroom SET ?`,
-                defaultClassroom,
+                [defaultClassroom],
                 (err, result) => {
                   if (err) return next(err);
 
