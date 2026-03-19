@@ -1632,7 +1632,7 @@ const util = {
         vars,
         (err, result) => {
           Sentry.addBreadcrumb({
-            type: 'info',
+            type: 'query',
             category: 'query',
             message: query,
             level: 'info',
