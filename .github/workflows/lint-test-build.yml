@@ -47,6 +47,7 @@ jobs:
         uses: docker/metadata-action@v6
         env:
           DOCKER_METADATA_SET_OUTPUT_ENV: 'true'
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
         with:
           images: |
             ghcr.io/${{ github.repository }}
