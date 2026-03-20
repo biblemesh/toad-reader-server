@@ -69,6 +69,6 @@ COPY ./ ./
 COPY --from=builder /app/node_modules ./node_modules
 
 HEALTHCHECK --interval=60s --timeout=10s --start-period=10s \
-   CMD ["node", "./healthcheck.js"]
+   CMD ["./healthcheck.js"]
 
-CMD ["npm", "start"]
+CMD ["app.js"]
