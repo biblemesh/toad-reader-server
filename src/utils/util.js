@@ -1242,11 +1242,13 @@ const util = {
 
         global.connection.query(
           modificationQueries.join('; '),
-          {
-            idpId,
-            userId,
-            bookId,
-          },
+          [
+            {
+              idpId,
+              userId,
+              bookId,
+            }
+          ],
           (err, results) => {
             if (err) throw(err)
             resolve()
