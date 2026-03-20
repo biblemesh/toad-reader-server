@@ -54,7 +54,7 @@ jobs:
           annotations: |
             org.opencontainers.image.title=biblemesh/toad-reader-server
             org.opencontainers.image.description=eReader
-            org.opencontainers.image.vendor=BI Ltd
+            # org.opencontainers.image.vendor=BI Ltd
           sep-annotations: ' --annotation '
           tags: |
             type=edge,branch=bm-develop
@@ -76,7 +76,7 @@ jobs:
             push=""
           fi
           echo CACHE_ARGS="--cache-from=type=gha,scope=$scope --cache-to=type=gha,scope=$scope,mode=max" >> $GITHUB_ENV
-          echo EXTRA_ARGS="\"--annotation ${{ steps.meta.outputs.annotations }}\" --platform linux/amd64,linux/arm64 $push" >> $GITHUB_ENV
+          echo EXTRA_ARGS="--annotation ${{ steps.meta.outputs.annotations }} --platform linux/amd64,linux/arm64 $push" >> $GITHUB_ENV
 
       - uses: actions/github-script@v8
         id: envs
