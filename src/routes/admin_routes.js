@@ -163,7 +163,6 @@ const getAdjustedImageBody = async (path, fileType, width, height) => {
 
 /**
  * @typedef {Object} ProcessUploadedFileOptions
- * @property {boolean} processedOneFile
  * @property {import('express').Request} req
  * @property {import('express').Response} res
  * @property {string[]} epubFilePaths
@@ -177,14 +176,11 @@ const getAdjustedImageBody = async (path, fileType, width, height) => {
 const processUploadedFile = async (
   name,
   file,
-  { processedOneFile, req, res, epubFilePaths, next, tmpDir },
+  { req, res, epubFilePaths, next, tmpDir },
 ) => {
   const { replaceExisting } = req.query;
   const toUploadDir = `${tmpDir}/toupload`;
   let bookRow, cleanUpBookIdpToDelete, beganResponse;
-
-  if (processedOneFile) return;
-  processedOneFile = true;
 
   try {
     if (
@@ -687,16 +683,18 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP) {
 
       let processedOneFile = false; // at this point, we only allow one upload at a time
 
-      form.on('file', async (name, file) =>
-        processUploadedFile(name, file, {
-          processedOneFile,
+      form.on('file', async (name, file) => {
+        if (processedOneFile) return;
+        processedOneFile = true;
+
+        return processUploadedFile(name, file, {
           req,
           res,
           epubFilePaths,
           next,
           tmpDir,
-        }),
-      );
+        });
+      });
 
       form.on('error', () => {
         res.status(400).send({ errorType: `bad_file` });
