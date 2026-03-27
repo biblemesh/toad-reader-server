@@ -1,6 +1,8 @@
-const logger = {
+const logLevel = parseInt(process.env.LOG_LEVEL) || 3; // 1=verbose, 2=important, 3=errors only
+
+module.exports = {
+  logLevel,
   log: (msgs, importanceLevel) => {
-    const logLevel = parseInt(process.env.LOG_LEVEL) || 3; // 1=verbose, 2=important, 3=errors only
     importanceLevel = importanceLevel || 1;
     if (importanceLevel >= logLevel) {
       if (!Array.isArray(msgs)) {
@@ -22,5 +24,3 @@ const logger = {
     }
   },
 };
-
-module.exports = logger;
