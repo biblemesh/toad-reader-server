@@ -60,7 +60,7 @@ const emptyS3Folder = async (Prefix) => {
     }),
   );
 
-  if (data.Contents.length == 0) return;
+  if ((data.Contents?.length || 0) == 0) return;
 
   const delParams = {
     Bucket: process.env.S3_BUCKET,
@@ -163,36 +163,58 @@ const getAdjustedImageBody = async (path, fileType, width, height) => {
 
 /**
  * @typedef {Object} ProcessUploadedFileOptions
- * @property {import('express').Request} req
- * @property {import('express').Response} res
+ * @property {Record<string, string>} query
+ * @property {Record<string, any> | undefined} tenantAuthInfo
+ * @property {string | undefined} hostname
+ * @property {Record<string, any>} user
+ * @property {() => string} getFrontendBaseUrl
+ * @property {(data: any) => void} res_send
+ * @property {(status: number) => void} res_status
+ * @property {(key: string, value: string) => void} res_set
+ * @property {(data: string) => void} res_write
+ * @property {() => void} res_end
  * @property {string[]} epubFilePaths
  * @property {import('express').NextFunction} next
  * @property {string} tmpDir
  *
  * @param {string} name
- * @param {File} file
+ * @param {multiparty.File} file
  * @param {ProcessUploadedFileOptions} options
  */
 const processUploadedFile = async (
   name,
   file,
-  { req, res, epubFilePaths, next, tmpDir },
+  {
+    query,
+    tenantAuthInfo,
+    hostname,
+    user,
+    getFrontendBaseUrl,
+    res_send,
+    res_status,
+    res_set,
+    res_write,
+    res_end,
+    epubFilePaths,
+    next,
+    tmpDir,
+  },
 ) => {
-  const { replaceExisting } = req.query;
+  const { replaceExisting } = query;
   const toUploadDir = `${tmpDir}/toupload`;
   let bookRow, cleanUpBookIdpToDelete, beganResponse;
 
   try {
     if (
-      req.tenantAuthInfo &&
-      (req.tenantAuthInfo || {}).action !== 'importbook' &&
-      (req.tenantAuthInfo || {}).domain !==
-        util.getIDPDomain({ host: req.hostname || req.headers.host })
+      tenantAuthInfo &&
+      hostname &&
+      (tenantAuthInfo || {}).action !== 'importbook' &&
+      (tenantAuthInfo || {}).domain !== util.getIDPDomain({ host: hostname })
     ) {
       throw new Error(`invalid_tenant_auth`);
     }
 
-    if (!req.tenantAuthInfo && !req.user.isAdmin) {
+    if (!tenantAuthInfo && !user.isAdmin) {
       throw new Error(`no_permission`);
     }
 
@@ -230,16 +252,17 @@ const processUploadedFile = async (
       }
     };
 
-    const filename = file.originalFilename;
+    const filename = file.originalFilename || file.name;
 
     if (!filename) {
+      console.log('filename', filename);
       throw new Error(`invalid_filename`);
     }
 
     const priceMatch = filename.match(/\$([0-9]+)\.([0-9]{2})(\.[^.]+)?$/);
     const epubSizeInMebibyte = Math.ceil(file.size / 1024 / 1024);
 
-    if (epubSizeInMebibyte > req.user.idpMaxMBPerBook) {
+    if (epubSizeInMebibyte > user.idpMaxMBPerBook) {
       throw new Error(`file_too_large`);
     }
 
@@ -266,12 +289,12 @@ const processUploadedFile = async (
 
     deleteFolderRecursive(toUploadDir);
 
-    fs.mkdirSync(toUploadDir);
+    fs.mkdirSync(toUploadDir, { recursive: true });
 
-    const zip = new admzip(file.path);
+    const zip = new admzip(file.path || file.name);
     zip.extractAllTo(toUploadDir);
 
-    fs.renameSync(file.path, `${toUploadDir}/book.epub`);
+    fs.renameSync(file.path || file.name, `${toUploadDir}/book.epub`);
 
     getEPUBFilePaths(toUploadDir);
     await Promise.all(
@@ -354,7 +377,7 @@ const processUploadedFile = async (
           `,
       vars: {
         ...bookRow,
-        idpId: req.user.idpId,
+        idpId: user.idpId,
       },
       next,
     });
@@ -375,21 +398,21 @@ const processUploadedFile = async (
         isbn: rows[0].isbn || '',
         // this also was the old way of doing things
         thumbnailHref: /^epub_content\/covers\//.test(rows[0].coverHref || ``)
-          ? `${util.getFrontendBaseUrl(req)}/${rows[0].coverHref}`
-          : `${util.getFrontendBaseUrl(req)}/epub_content/covers/book_${rows[0].id}.png`,
+          ? `${getFrontendBaseUrl()}/${rows[0].coverHref}`
+          : `${getFrontendBaseUrl()}/epub_content/covers/book_${rows[0].id}.png`,
         epubSizeInMB: rows[0].epubSizeInMB,
       };
 
       if (rows[0].alreadyBookInThisIdp == '1') {
         log('Import unnecessary (book already associated with this idp)', 2);
-        res.send({
+        res_send({
           ...responseBase,
           note: 'already-associated',
         });
       } else {
         const vars = (cleanUpBookIdpToDelete = {
           book_id: rows[0].id,
-          idp_id: req.user.idpId,
+          idp_id: user.idpId,
         });
         log(['INSERT book-idp row', vars], 2);
         await util.runQuery({
@@ -399,7 +422,7 @@ const processUploadedFile = async (
         });
 
         await util.updateComputedBookAccess({
-          idpId: req.user.idpId,
+          idpId: user.idpId,
           bookId: rows[0].id,
           log,
         });
@@ -408,7 +431,7 @@ const processUploadedFile = async (
           'Import unnecessary (book exists in idp with same group; added association)',
           2,
         );
-        res.send({
+        res_send({
           ...responseBase,
           note: 'associated-to-existing',
         });
@@ -447,7 +470,7 @@ const processUploadedFile = async (
     } else {
       const vars = (cleanUpBookIdpToDelete = {
         book_id: bookRow.id,
-        idp_id: req.user.idpId,
+        idp_id: user.idpId,
       });
       log(['INSERT book-idp row', vars], 2);
       await util.runQuery({
@@ -459,13 +482,13 @@ const processUploadedFile = async (
 
     // From this point, we expect it to be successful. Send some info to keep the connection alive.
     beganResponse = true;
-    res.set('Content-Type', 'application/json');
-    res.write(`{`);
+    res_set('Content-Type', 'application/json');
+    res_write(`{`);
     let timeOfLastResponseWrite = Date.now();
     let writeResponseIndex = 0;
     const addToResponseToKeepAlive = () => {
       if (Date.now() > timeOfLastResponseWrite + 1000 * 30) {
-        res.write(`"ignore-${writeResponseIndex++}":0,`);
+        res_write(`"ignore-${writeResponseIndex++}":0,`);
         timeOfLastResponseWrite = Date.now();
       }
     };
@@ -562,7 +585,7 @@ const processUploadedFile = async (
     });
 
     await util.updateComputedBookAccess({
-      idpId: req.user.idpId,
+      idpId: user.idpId,
       bookId: bookRow.id,
       log,
     });
@@ -570,18 +593,18 @@ const processUploadedFile = async (
     log('Import successful', 2);
     try {
       // If everything was successful, but the connection timed out, don't delete it.
-      res.write(
+      res_write(
         `"success": true,` +
           (noOfflineSearch ? `"noOfflineSearch": true,` : ``) +
           `"bookId": ${bookRow.id},` +
           `"title": "${bookRow.title.replace(/"/g, '\\"')}",` +
           `"author": "${bookRow.author.replace(/"/g, '\\"')}",` +
           `"isbn": "${(bookRow.isbn || '').replace(/"/g, '\\"')}",` +
-          `"thumbnailHref": "${util.getFrontendBaseUrl(req)}/${bookRow.coverHref}",` +
+          `"thumbnailHref": "${getFrontendBaseUrl()}/${bookRow.coverHref}",` +
           `"epubSizeInMB": ${bookRow.epubSizeInMB}` +
           `}`,
       );
-      res.end();
+      res_end();
     } catch {
       // Do nothing
     }
@@ -607,7 +630,7 @@ const processUploadedFile = async (
       if (bookRow) {
         await deleteBookIfUnassociated(bookRow.id, next);
         await util.updateComputedBookAccess({
-          idpId: req.user.idpId,
+          idpId: user.idpId,
           bookId: bookRow.id,
           log,
         });
@@ -619,14 +642,15 @@ const processUploadedFile = async (
     }
 
     if (beganResponse) {
-      res.write(`"success": false` + `}`);
-      res.end();
+      res_write(`"success": false` + `}`);
+      res_end();
     } else {
-      res.status(400).send({
+      res_status(400);
+      res_send({
         errorType: /^[-_a-z]+$/.test(err.message)
           ? err.message
           : 'unable_to_process',
-        maxMB: req.user.idpMaxMBPerBook,
+        maxMB: user.idpMaxMBPerBook,
       });
     }
   }
@@ -688,8 +712,16 @@ module.exports = function (app, ensureAuthenticatedAndCheckIDP) {
         processedOneFile = true;
 
         return processUploadedFile(name, file, {
-          req,
-          res,
+          query: req.query,
+          tenantAuthInfo: req.tenantAuthInfo,
+          hostname: req.hostname || req.headers.host,
+          user: req.user,
+          getFrontendBaseUrl: () => util.getFrontendBaseUrl(req),
+          res_send: res.send,
+          res_status: res.status,
+          res_set: res.set,
+          res_write: res.write,
+          res_end: res.end,
           epubFilePaths,
           next,
           tmpDir,
