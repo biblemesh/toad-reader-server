@@ -64,7 +64,7 @@
     "minisearch": "^2.4.1",
     "moment": "2.24.0",
     "multiparty": "4.1.2",
-    "music-metadata": "^7.14.0",
+    "music-metadata": "^11.12.3",
     "mysql2": "3.19.1",
     "node-fetch": "^2.7.0",
     "oauth-signature": "1.5.0",
